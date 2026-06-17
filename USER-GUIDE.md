@@ -50,6 +50,8 @@ dbType=mysql                               # 1차 mysql 고정
 outputDir=./output                         # 산출물 출력 위치
 useIdgnr=false                             # 채번 사용 여부 (true면 String PK 필요)
 baseUrl=http://localhost:8080              # 생성 후 안내 URL의 앞부분 (톰캣 포트/컨텍스트)
+mapperRoot=egovframework/mapper            # Mapper XML 스캔/출력 루트 (프로젝트 스캔 경로에 맞게)
+jspRoot=WEB-INF/jsp                        # JSP 출력 루트
 
 # 공통 컴포넌트 베이스 (eGov 5.0.1 기본값 — 다른 버전이면 여기만 교체)
 daoBase=org.egovframe.rte.psl.dataaccess.EgovAbstractMapper
@@ -57,10 +59,13 @@ serviceBase=org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl
 paginationInfo=org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo
 ```
 
-> **★ module 경로 주의 (매우 중요)**
-> eGov의 MyBatis Mapper 스캔 경로가 `classpath:/egovframework/mapper/let/**/*_${DbType}.xml` 입니다.
-> 즉 **module 값이 `let/` 으로 시작해야** 생성된 Mapper XML이 자동 로드됩니다.
-> 예: `module=let/sym/cal` (O) / `module=sym/cal` (X — Mapper 안 잡힘)
+> **★ Mapper 스캔 경로 주의 (매우 중요)**
+> 생성된 Mapper XML이 자동 로드되려면 **출력 경로가 그 프로젝트의 MyBatis 스캔 경로와 맞아야** 합니다.
+> 출력 경로 = `src/main/resources/{mapperRoot}/{module}/...` 입니다.
+> - **표준 eGov**(스캔 패턴 `mapper/let/**`)면: `mapperRoot=egovframework/mapper` + `module=let/sym/cal`
+> - **스캔 경로가 다른 프로젝트**면 `mapperRoot`(와 필요시 `module`)를 그 경로에 맞추세요.
+>   예: 스캔이 `egovframework/sqlmap/**`이면 `mapperRoot=egovframework/sqlmap`.
+> - 프로젝트의 실제 스캔 패턴은 `context-mapper.xml`(sqlSessionFactory의 `mapperLocations`)에서 확인합니다.
 
 ---
 

@@ -93,7 +93,7 @@ src/com/hanbit/egovgen/
 | **`render`는 고정점까지 반복** | 값 안에 중첩된 `__KEY__`(예: JSP의 module/entity)까지 풀기 위함. **1패스로 되돌리면 버그 재발** |
 | **채번은 String PK 전제** | eGov 표준 채번이 `PREFIX_0000…` String. 정수 PK엔 `AUTO_INCREMENT`가 더 적합 |
 | **`cipers = PK길이 − prefix길이`** | eGov `EgovIdGnrStrategyImpl`의 `cipers`는 "숫자 자리수", prefix는 별도. 둘의 합이 PK 컬럼 길이 |
-| **`module`은 `let/`로 시작** | eGov Mapper 스캔 경로가 `mapper/let/**`. 안 지키면 쿼리 로드 안 됨 |
+| **Mapper/JSP 출력 루트는 설정(`mapperRoot`/`jspRoot`)** | eGov 스캔 경로가 프로젝트마다 달라 변수화(기본 `egovframework/mapper`·`WEB-INF/jsp`). `module`은 그 하위 세그먼트 — 표준 eGov면 `let/`로 시작 |
 | **JSP taglib은 레거시 sun.com URI 유지** | eGov 5.0.1이 jakarta로 갔지만 JSP taglib은 `http://java.sun.com/jsp/jstl/core` 유지(실측). Controller/검증 import만 jakarta.* |
 
 ## 7. 검증된 eGov 환경 좌표 (5.0.1)

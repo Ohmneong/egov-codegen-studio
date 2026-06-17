@@ -47,6 +47,8 @@ public class Main {
             cfg.override("dbType", opt.get("dbType"));
             cfg.override("idgnr", opt.get("idgnr"));
             cfg.override("baseUrl", opt.get("baseUrl"));
+            cfg.override("mapperRoot", opt.get("mapperRoot"));
+            cfg.override("jspRoot", opt.get("jspRoot"));
 
             // DDL 읽기
             Path ddlFile = Path.of(opt.get("ddl"));

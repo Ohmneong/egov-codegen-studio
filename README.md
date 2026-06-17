@@ -72,7 +72,7 @@ output/src/main/webapp/WEB-INF/jsp/{module}/    {Entity}{List,Detail,Regist,Modi
 
 ## 적응형 설정 (gen.properties)
 
-프로젝트가 바뀌면 `gen.properties`만 교체한다. 핵심 항목: `basePackage`, `module`, `tablePrefix`, `dbType`, 공통 컴포넌트 베이스 경로(`daoBase`/`serviceBase`/`paginationInfo`).
+프로젝트가 바뀌면 `gen.properties`만 교체한다. 핵심 항목: `basePackage`, `module`, `tablePrefix`, `dbType`, **Mapper/JSP 스캔·출력 루트(`mapperRoot`/`jspRoot`)**, 공통 컴포넌트 베이스 경로(`daoBase`/`serviceBase`/`paginationInfo`).
 
 ## 구조
 

@@ -32,6 +32,8 @@ public class GenGuiApp {
     private final JTextField dbTypeField = new JTextField();
     private final JTextField outDirField = new JTextField();
     private final JTextField baseUrlField = new JTextField();
+    private final JTextField mapperRootField = new JTextField();
+    private final JTextField jspRootField = new JTextField();
     private final JCheckBox idgnrCheck = new JCheckBox("채번(EgovIdGnrService) 사용 — String PK 전제");
 
     /** 시작 시·생성 시 기본 베이스로 쓰는 설정 파일(작업폴더 기준). 없으면 내장 기본값 사용. */
@@ -75,7 +77,7 @@ public class GenGuiApp {
 
         int r = 0;
         addRow(p, g, r++, "루트 패키지(basePackage)", pkgField);
-        addRow(p, g, r++, "모듈(module, let/ 권장)", moduleField);
+        addRow(p, g, r++, "모듈(module)", moduleField);
         addRow(p, g, r++, "테이블 prefix(tablePrefix)", prefixField);
         addRow(p, g, r++, "DB 타입(dbType)", dbTypeField);
 
@@ -90,6 +92,9 @@ public class GenGuiApp {
         addRow(p, g, r++, "출력 루트(outputDir)", outPanel);
 
         addRow(p, g, r++, "접속 URL 베이스(baseUrl)", baseUrlField);
+        mapperRootField.setToolTipText("Mapper XML 스캔/출력 루트. 프로젝트 스캔 경로가 다르면 변경(기본 egovframework/mapper)");
+        addRow(p, g, r++, "Mapper 출력 루트(mapperRoot)", mapperRootField);
+        addRow(p, g, r++, "JSP 출력 루트(jspRoot)", jspRootField);
 
         g.gridx = 1; g.gridy = r; g.weightx = 1;
         p.add(idgnrCheck, g);
@@ -174,6 +179,8 @@ public class GenGuiApp {
             dbTypeField.setText(c.dbType());
             outDirField.setText(c.outputDir());
             baseUrlField.setText(c.baseUrl());
+            mapperRootField.setText(c.mapperRoot());
+            jspRootField.setText(c.jspRoot());
             idgnrCheck.setSelected(c.useIdgnr());
         } catch (IOException ex) {
             error("설정 파일을 읽지 못했습니다:\n" + ex.getMessage());
@@ -195,6 +202,8 @@ public class GenGuiApp {
             cfg.setDbType(dbTypeField.getText().trim());
             cfg.setOutputDir(outDirField.getText().trim());
             cfg.setBaseUrl(baseUrlField.getText().trim());
+            cfg.setMapperRoot(mapperRootField.getText().trim());
+            cfg.setJspRoot(jspRootField.getText().trim());
             cfg.setUseIdgnr(idgnrCheck.isSelected());
 
             GenerationResult r = new GenerationService().generate(cfg, ddl);

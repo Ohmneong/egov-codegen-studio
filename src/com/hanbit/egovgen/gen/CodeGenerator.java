@@ -31,8 +31,8 @@ public class CodeGenerator {
         Path javaServiceDir = out.resolve("src/main/java/" + pkgPath + "/service");
         Path javaImplDir = javaServiceDir.resolve("impl");
         Path javaWebDir = out.resolve("src/main/java/" + pkgPath + "/web");
-        Path mapperDir = out.resolve("src/main/resources/egovframework/mapper/" + cfg.module());
-        Path jspDir = out.resolve("src/main/webapp/WEB-INF/jsp/" + cfg.module());
+        Path mapperDir = out.resolve("src/main/resources/" + cfg.mapperRoot() + "/" + cfg.module());
+        Path jspDir = out.resolve("src/main/webapp/" + cfg.jspRoot() + "/" + cfg.module());
 
         var written = new java.util.ArrayList<Path>();
         written.add(write(javaServiceDir.resolve(entity + ".java"), domainVo(t)));
