@@ -194,6 +194,7 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 
 | 문서 | 누구를 위해 |
 |---|---|
+| SESSION-GUIDE.md | 새 세션에서 이어 작업 — 시작 절차·현재 스냅샷·운영 함정 (진입점) |
 | **HANDOVER.md** (이 문서) | 프로젝트를 이어받는 사람 — 전체 그림·경과·결정·다음 단계 |
 | QUICKSTART.md | 처음 써보는 사람 — 복붙 따라하기 |
 | USER-GUIDE.md | 사용자 — 옵션·설정·트러블슈팅 |
