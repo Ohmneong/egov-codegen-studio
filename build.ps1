@@ -37,7 +37,7 @@ if ($LASTEXITCODE -ne 0) { Write-Error "컴파일 실패"; exit 1 }
 
 # JAR 패키징 (Main-Class 매니페스트)
 Write-Host "JAR 생성 중..."
-& $jarExe --create --file $jarPath --main-class com.hanbit.egovgen.Main -C $buildDir .
+& $jarExe --create --file $jarPath --main-class dev.myoh.egovgen.Main -C $buildDir .
 if ($LASTEXITCODE -ne 0) { Write-Error "JAR 생성 실패"; exit 1 }
 
 Write-Host ""

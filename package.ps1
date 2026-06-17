@@ -52,7 +52,7 @@ $jpArgs = @(
     "--vendor", "Hanbit",
     "--input", (Join-Path $root "dist"),
     "--main-jar", "egov-crud-gen.jar",
-    "--main-class", "com.hanbit.egovgen.ui.GenGuiApp",
+    "--main-class", "dev.myoh.egovgen.ui.GenGuiApp",
     "--dest", $dest,
     "--java-options", "-Dfile.encoding=UTF-8"
 )

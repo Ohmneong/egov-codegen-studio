@@ -1,4 +1,4 @@
-package com.hanbit.egovgen.gen;
+package dev.myoh.egovgen.gen;
 
 import java.util.Locale;
 

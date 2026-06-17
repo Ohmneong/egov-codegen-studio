@@ -32,4 +32,4 @@ if (-not (Test-Path $jar)) {
 
 # gen.properties 를 작업 폴더 기준으로 읽으므로 스크립트 위치로 이동
 Set-Location $PSScriptRoot
-& $javaw "-Dfile.encoding=UTF-8" -cp $jar com.hanbit.egovgen.ui.GenGuiApp
+& $javaw "-Dfile.encoding=UTF-8" -cp $jar dev.myoh.egovgen.ui.GenGuiApp

@@ -1,9 +1,9 @@
-package com.hanbit.egovgen.parser;
+package dev.myoh.egovgen.parser;
 
-import com.hanbit.egovgen.gen.NameUtil;
-import com.hanbit.egovgen.gen.TypeMapper;
-import com.hanbit.egovgen.model.ColumnMeta;
-import com.hanbit.egovgen.model.TableMeta;
+import dev.myoh.egovgen.gen.NameUtil;
+import dev.myoh.egovgen.gen.TypeMapper;
+import dev.myoh.egovgen.model.ColumnMeta;
+import dev.myoh.egovgen.model.TableMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;

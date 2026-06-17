@@ -89,7 +89,7 @@ output/src/main/webapp/WEB-INF/jsp/{module}/    {Entity}{List,Detail,Regist,Modi
 ## 구조
 
 ```
-src/com/hanbit/egovgen/
+src/dev/myoh/egovgen/
   Main.java                 CLI 진입점 (얇은 어댑터)
   config/GenConfig.java     적응형 설정 로드 + 폼 주입 setter
   model/                    TableMeta, ColumnMeta (중간 메타모델)

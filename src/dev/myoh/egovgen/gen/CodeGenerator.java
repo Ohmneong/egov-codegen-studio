@@ -1,8 +1,8 @@
-package com.hanbit.egovgen.gen;
+package dev.myoh.egovgen.gen;
 
-import com.hanbit.egovgen.config.GenConfig;
-import com.hanbit.egovgen.model.ColumnMeta;
-import com.hanbit.egovgen.model.TableMeta;
+import dev.myoh.egovgen.config.GenConfig;
+import dev.myoh.egovgen.model.ColumnMeta;
+import dev.myoh.egovgen.model.TableMeta;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

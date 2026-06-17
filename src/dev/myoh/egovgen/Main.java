@@ -1,9 +1,9 @@
-package com.hanbit.egovgen;
+package dev.myoh.egovgen;
 
-import com.hanbit.egovgen.config.GenConfig;
-import com.hanbit.egovgen.model.TableMeta;
-import com.hanbit.egovgen.service.GenerationResult;
-import com.hanbit.egovgen.service.GenerationService;
+import dev.myoh.egovgen.config.GenConfig;
+import dev.myoh.egovgen.model.TableMeta;
+import dev.myoh.egovgen.service.GenerationResult;
+import dev.myoh.egovgen.service.GenerationService;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

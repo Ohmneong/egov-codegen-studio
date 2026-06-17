@@ -98,7 +98,7 @@ DDL 텍스트 → [DdlParser] → TableMeta/ColumnMeta → [CodeGenerator + text
 ```
 
 ```
-src/com/hanbit/egovgen/
+src/dev/myoh/egovgen/
 ├─ Main.java                  CLI 진입점. 인자 파싱, 파서 선택, 실행 + 결과/URL 출력
 ├─ config/GenConfig.java      설정 로드(gen.properties) + CLI 덮어쓰기. 적응형 설정의 단일 출처
 ├─ model/

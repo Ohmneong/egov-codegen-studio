@@ -1,4 +1,4 @@
-package com.hanbit.egovgen.model;
+package dev.myoh.egovgen.model;
 
 import java.util.ArrayList;
 import java.util.List;

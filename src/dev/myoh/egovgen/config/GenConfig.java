@@ -1,4 +1,4 @@
-package com.hanbit.egovgen.config;
+package dev.myoh.egovgen.config;
 
 import java.io.IOException;
 import java.io.InputStream;

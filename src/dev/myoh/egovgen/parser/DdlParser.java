@@ -1,6 +1,6 @@
-package com.hanbit.egovgen.parser;
+package dev.myoh.egovgen.parser;
 
-import com.hanbit.egovgen.model.TableMeta;
+import dev.myoh.egovgen.model.TableMeta;
 
 import java.util.List;
 

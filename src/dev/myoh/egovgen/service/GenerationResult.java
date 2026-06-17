@@ -1,6 +1,6 @@
-package com.hanbit.egovgen.service;
+package dev.myoh.egovgen.service;
 
-import com.hanbit.egovgen.model.TableMeta;
+import dev.myoh.egovgen.model.TableMeta;
 
 import java.nio.file.Path;
 import java.util.List;

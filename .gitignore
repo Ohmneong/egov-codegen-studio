@@ -11,6 +11,9 @@ profiles/
 # IDE / OS
 .idea/
 .vscode/
+.project
+.classpath
+.settings/
 *.iml
 Thumbs.db
 .DS_Store

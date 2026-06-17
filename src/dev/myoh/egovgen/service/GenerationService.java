@@ -1,10 +1,10 @@
-package com.hanbit.egovgen.service;
+package dev.myoh.egovgen.service;
 
-import com.hanbit.egovgen.config.GenConfig;
-import com.hanbit.egovgen.gen.CodeGenerator;
-import com.hanbit.egovgen.model.TableMeta;
-import com.hanbit.egovgen.parser.DdlParser;
-import com.hanbit.egovgen.parser.MySqlDdlParser;
+import dev.myoh.egovgen.config.GenConfig;
+import dev.myoh.egovgen.gen.CodeGenerator;
+import dev.myoh.egovgen.model.TableMeta;
+import dev.myoh.egovgen.parser.DdlParser;
+import dev.myoh.egovgen.parser.MySqlDdlParser;
 
 import java.io.IOException;
 import java.nio.file.Files;

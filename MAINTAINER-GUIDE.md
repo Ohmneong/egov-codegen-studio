@@ -23,7 +23,7 @@ DDL 텍스트 → [DdlParser] → TableMeta/ColumnMeta(메타모델) → [CodeGe
 ## 2. 소스 구조와 역할
 
 ```
-src/com/hanbit/egovgen/
+src/dev/myoh/egovgen/
 ├─ Main.java                  CLI 진입점(얇은 어댑터). 인자 파싱(parseArgs) + 파일 읽기 → GenerationService 호출 → 콘솔/URL 출력
 ├─ config/GenConfig.java      설정 로드(properties) + CLI 덮어쓰기(override) + GUI 폼 주입(setXxx). 적응형 설정의 단일 출처
 ├─ model/

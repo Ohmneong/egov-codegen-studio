@@ -1,4 +1,4 @@
-package com.hanbit.egovgen.gen;
+package dev.myoh.egovgen.gen;
 
 /**
  * 명명 규칙 변환 유틸. (RESTDE_DE ↔ restdeDe ↔ RestdeDe)

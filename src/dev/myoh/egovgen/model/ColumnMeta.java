@@ -1,4 +1,4 @@
-package com.hanbit.egovgen.model;
+package dev.myoh.egovgen.model;
 
 /**
  * 테이블 컬럼 한 개의 메타정보.

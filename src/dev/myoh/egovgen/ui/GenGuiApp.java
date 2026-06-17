@@ -1,9 +1,9 @@
-package com.hanbit.egovgen.ui;
+package dev.myoh.egovgen.ui;
 
-import com.hanbit.egovgen.config.GenConfig;
-import com.hanbit.egovgen.service.GenerationResult;
-import com.hanbit.egovgen.service.GenerationService;
-import com.hanbit.egovgen.service.PreviewEntry;
+import dev.myoh.egovgen.config.GenConfig;
+import dev.myoh.egovgen.service.GenerationResult;
+import dev.myoh.egovgen.service.GenerationService;
+import dev.myoh.egovgen.service.PreviewEntry;
 
 import javax.swing.*;
 import java.awt.*;
