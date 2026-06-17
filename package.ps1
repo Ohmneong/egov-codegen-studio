@@ -56,6 +56,17 @@ $jpArgs = @(
     "--dest", $dest,
     "--java-options", "-Dfile.encoding=UTF-8"
 )
+
+# 아이콘: 프로젝트 루트의 icon.ico 가 있으면 적용(없으면 jpackage 기본 아이콘).
+# Windows jpackage 는 .ico 만 받는다. PNG 만 있으면 .ico 로 먼저 변환할 것.
+$iconPath = Join-Path $root "icon.ico"
+if (Test-Path $iconPath) {
+    $jpArgs += @("--icon", $iconPath)
+    Write-Host "icon: $iconPath"
+} else {
+    Write-Host "icon: icon.ico 없음 → 기본 아이콘 사용(프로젝트 루트에 icon.ico 를 두면 적용됨)"
+}
+
 if ($Type -ne "app-image") {
     # 시작메뉴·바탕화면 바로가기, 설치경로 선택, 사용자 단위 설치(관리자 권한 불필요)
     $jpArgs += @("--win-menu", "--win-shortcut", "--win-dir-chooser", "--win-per-user-install")
