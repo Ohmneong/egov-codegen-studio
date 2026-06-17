@@ -3,6 +3,7 @@ package com.hanbit.egovgen.ui;
 import com.hanbit.egovgen.config.GenConfig;
 import com.hanbit.egovgen.service.GenerationResult;
 import com.hanbit.egovgen.service.GenerationService;
+import com.hanbit.egovgen.service.PreviewEntry;
 
 import javax.swing.*;
 import java.awt.*;
@@ -140,9 +141,12 @@ public class GenGuiApp {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
         JButton reload = new JButton("설정 다시 불러오기");
         reload.addActionListener(e -> loadConfigIntoForm(defaultConfig));
+        JButton preview = new JButton("미리보기");
+        preview.addActionListener(e -> onPreview());
         JButton gen = new JButton("생성");
         gen.addActionListener(e -> onGenerate());
         p.add(reload);
+        p.add(preview);
         p.add(gen);
         return p;
     }
@@ -261,6 +265,26 @@ public class GenGuiApp {
         return cfg;
     }
 
+    /** 생성하지 않고, 만들어질 파일 목록과 기존(덮어쓸) 파일을 우측에 보여준다. */
+    private void onPreview() {
+        String ddl = ddlArea.getText();
+        if (ddl == null || ddl.isBlank()) { error("DDL을 입력하거나 파일을 여세요."); return; }
+        try {
+            List<PreviewEntry> plan = new GenerationService().preview(formToConfig(), ddl);
+            long existing = plan.stream().filter(PreviewEntry::exists).count();
+            StringBuilder sb = new StringBuilder();
+            sb.append("[미리보기] 생성 예정 ").append(plan.size()).append("개 파일")
+              .append(existing > 0 ? "  (기존 " + existing + "개 덮어씀)" : "").append("\n\n");
+            for (PreviewEntry e : plan) {
+                sb.append(e.exists() ? "  [덮어씀] " : "  [신규]   ").append(e.path()).append('\n');
+            }
+            resultArea.setText(sb.toString());
+            resultArea.setCaretPosition(0);
+        } catch (Exception ex) {
+            error("미리보기 실패:\n" + ex.getMessage());
+        }
+    }
+
     private void onGenerate() {
         String ddl = ddlArea.getText();
         if (ddl == null || ddl.isBlank()) {
@@ -268,9 +292,18 @@ public class GenGuiApp {
             return;
         }
         try {
-            // 현재 폼값으로 설정 구성 → 생성
+            // 현재 폼값으로 설정 구성
             GenConfig cfg = formToConfig();
-            List<GenerationResult> results = new GenerationService().generateAll(cfg, ddl);
+            GenerationService svc = new GenerationService();
+            // 덮어쓰기 경고: 기존 파일이 있으면 확인
+            long existing = svc.preview(cfg, ddl).stream().filter(PreviewEntry::exists).count();
+            if (existing > 0) {
+                int ans = JOptionPane.showConfirmDialog(frame,
+                        existing + "개 파일이 이미 있습니다. 덮어쓸까요?", "덮어쓰기 확인",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (ans != JOptionPane.YES_OPTION) return;
+            }
+            List<GenerationResult> results = svc.generateAll(cfg, ddl);
             StringBuilder sb = new StringBuilder();
             if (results.size() > 1) sb.append("■ ").append(results.size()).append("개 테이블 일괄 생성\n\n");
             for (GenerationResult r : results) sb.append(formatResult(r)).append('\n');

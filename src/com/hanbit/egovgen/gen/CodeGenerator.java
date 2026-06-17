@@ -22,8 +22,11 @@ public class CodeGenerator {
 
     public CodeGenerator(GenConfig cfg) { this.cfg = cfg; }
 
-    /** 전체 생성. 생성된 파일 경로 목록을 반환. */
-    public List<Path> generate(TableMeta t) throws IOException {
+    /**
+     * 생성될 (파일 경로 → 내용) 맵을 만든다. 파일은 쓰지 않으므로 미리보기에도 쓴다.
+     * 순서 유지를 위해 LinkedHashMap.
+     */
+    public Map<Path, String> build(TableMeta t) {
         String entity = t.getEntityName();
         String pkgPath = cfg.basePackage().replace('.', '/');
         Path out = Path.of(cfg.outputDir());
@@ -34,25 +37,32 @@ public class CodeGenerator {
         Path mapperDir = out.resolve("src/main/resources/" + cfg.mapperRoot() + "/" + cfg.module());
         Path jspDir = out.resolve("src/main/webapp/" + cfg.jspRoot() + "/" + cfg.module());
 
-        var written = new java.util.ArrayList<Path>();
-        written.add(write(javaServiceDir.resolve(entity + ".java"), domainVo(t)));
-        written.add(write(javaServiceDir.resolve(entity + "VO.java"), searchVo(t)));
-        written.add(write(javaServiceDir.resolve(entity +"ManageService.java"), serviceInterface(t)));
-        written.add(write(javaImplDir.resolve(entity +"ManageServiceImpl.java"), serviceImpl(t)));
-        written.add(write(javaImplDir.resolve(entity + "ManageDAO.java"), dao(t)));
-        written.add(write(javaWebDir.resolve(entity +"ManageController.java"), controller(t)));
-        written.add(write(mapperDir.resolve(entity +"Manage_SQL_mysql.xml"), mapperXml(t)));
-        written.add(write(jspDir.resolve(entity +"List.jsp"), jspList(t)));
-        written.add(write(jspDir.resolve(entity +"Detail.jsp"), jspDetail(t)));
-        written.add(write(jspDir.resolve(entity +"Regist.jsp"), jspForm(t, false)));
-        written.add(write(jspDir.resolve(entity +"Modify.jsp"), jspForm(t, true)));
+        Map<Path, String> files = new LinkedHashMap<>();
+        files.put(javaServiceDir.resolve(entity + ".java"), domainVo(t));
+        files.put(javaServiceDir.resolve(entity + "VO.java"), searchVo(t));
+        files.put(javaServiceDir.resolve(entity + "ManageService.java"), serviceInterface(t));
+        files.put(javaImplDir.resolve(entity + "ManageServiceImpl.java"), serviceImpl(t));
+        files.put(javaImplDir.resolve(entity + "ManageDAO.java"), dao(t));
+        files.put(javaWebDir.resolve(entity + "ManageController.java"), controller(t));
+        files.put(mapperDir.resolve(entity + "Manage_SQL_mysql.xml"), mapperXml(t));
+        files.put(jspDir.resolve(entity + "List.jsp"), jspList(t));
+        files.put(jspDir.resolve(entity + "Detail.jsp"), jspDetail(t));
+        files.put(jspDir.resolve(entity + "Regist.jsp"), jspForm(t, false));
+        files.put(jspDir.resolve(entity + "Modify.jsp"), jspForm(t, true));
 
-        // 채번 옵션: 자동 로드되는 spring/com/context-idgen-{entity}.xml 생성
+        // 채번 옵션: 자동 로드되는 spring/com/context-idgen-{entity}.xml
         if (idgnrApplicable(t)) {
             Path idgenXml = out.resolve("src/main/resources/egovframework/spring/com")
                     .resolve("context-idgen-" + decap(entity) + ".xml");
-            written.add(write(idgenXml, idgnrBeanXml(t)));
+            files.put(idgenXml, idgnrBeanXml(t));
         }
+        return files;
+    }
+
+    /** 전체 생성(파일 쓰기). 생성된 파일 경로 목록을 반환. */
+    public List<Path> generate(TableMeta t) throws IOException {
+        var written = new java.util.ArrayList<Path>();
+        for (var e : build(t).entrySet()) written.add(write(e.getKey(), e.getValue()));
         return written;
     }
 

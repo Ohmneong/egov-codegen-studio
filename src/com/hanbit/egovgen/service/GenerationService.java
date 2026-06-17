@@ -7,6 +7,7 @@ import com.hanbit.egovgen.parser.DdlParser;
 import com.hanbit.egovgen.parser.MySqlDdlParser;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,22 @@ public class GenerationService {
                     urlBase + "RegistView.do"));
         }
         return results;
+    }
+
+    /**
+     * 생성하지 않고, 생성될 파일 목록과 기존 존재 여부만 산출한다(미리보기/덮어쓰기 경고용).
+     */
+    public List<PreviewEntry> preview(GenConfig cfg, String ddl) {
+        DdlParser parser = selectParser(cfg.dbType());
+        List<TableMeta> tables = parser.parseAll(ddl, cfg.tablePrefix());
+        CodeGenerator gen = new CodeGenerator(cfg);
+        List<PreviewEntry> entries = new ArrayList<>();
+        for (TableMeta t : tables) {
+            for (Path p : gen.build(t).keySet()) {
+                entries.add(new PreviewEntry(p, Files.exists(p)));
+            }
+        }
+        return entries;
     }
 
     /** 파서 선택 (DB 교체 지점). 1차는 mysql만 지원. */
