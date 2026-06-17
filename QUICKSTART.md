@@ -11,11 +11,13 @@
 PowerShell 창을 열고, 도구 폴더로 이동한 뒤 빌드합니다.
 
 ```powershell
-cd C:\Users\ADMIN\Desktop\pjt\egov-crud-gen
+cd C:\Users\ADMIN\Desktop\pjt\egov-codegen-studio
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
 `빌드 완료: ...dist\egov-crud-gen.jar` 가 보이면 성공입니다. (이 단계는 처음 한 번만 하면 됩니다.)
+
+> **💡 명령어가 부담스러우면 GUI(화면)로 하세요.** 빌드 후 `.\run-gui.ps1` 을 실행하면 창이 떠서 DDL 붙여넣기·설정·생성을 마우스로 할 수 있습니다(STEP 2~5를 화면으로 대체). 자세히는 맨 아래 **[STEP 7] GUI로 하기** 참고.
 
 ---
 
@@ -37,7 +39,7 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
    ```
 
 3. **어디에 저장하나요?** 도구 폴더 안 `sample` 폴더에 저장하면 편합니다.
-   - 저장 위치: `C:\Users\ADMIN\Desktop\pjt\egov-crud-gen\sample\`
+   - 저장 위치: `C:\Users\ADMIN\Desktop\pjt\egov-codegen-studio\sample\`
    - 파일 이름 예: `notice.sql`  (메모장 "다른 이름으로 저장" → 파일 형식 "모든 파일" → `notice.sql`)
 
 > 채번(번호 자동 생성)을 쓸 거면 PK(여기선 `NOTICE_ID`)를 꼭 **`VARCHAR`** 로 만드세요.
@@ -50,11 +52,13 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 
 ```properties
 basePackage=egovframework.let.cop.notice    # 코드가 들어갈 패키지
-module=let/cop/notice                         # 화면/URL/쿼리 경로 (반드시 let/ 으로 시작!)
+module=let/cop/notice                         # 화면/URL/쿼리 경로 세그먼트
 tablePrefix=LETTN_                            # 테이블 이름 앞에 떼어낼 부분 (없으면 비워두기)
 ```
 
-> `module`은 꼭 **`let/`** 으로 시작해야 합니다. 안 그러면 쿼리(XML)를 프로그램이 못 찾아요.
+> **쿼리(Mapper XML)가 자동으로 잡히려면** 출력 경로가 그 프로젝트의 스캔 경로와 맞아야 합니다.
+> - 표준 eGov(스캔 `mapper/let/**`)면 위처럼 `module`을 **`let/`** 으로 시작하면 됩니다(기본값 그대로).
+> - 스캔 경로가 다른 프로젝트면 `gen.properties`의 `mapperRoot`(기본 `egovframework/mapper`)를 그 경로에 맞추세요. (자세히는 USER-GUIDE 3장)
 > 채번을 쓰려면 맨 아래 `useIdgnr=true` 로 바꾸세요.
 
 ---
@@ -90,9 +94,9 @@ PowerShell에서 (STEP 1의 그 창, 도구 폴더 안):
 생성된 파일은 도구 폴더 안 **`output`** 폴더에 들어갑니다.
 
 ```
-egov-crud-gen\output\src\main\java\...      ← 자바 (VO/Service/DAO/Controller)
-egov-crud-gen\output\src\main\resources\... ← 쿼리(Mapper XML)
-egov-crud-gen\output\src\main\webapp\...     ← 화면(JSP)
+egov-codegen-studio\output\src\main\java\...      ← 자바 (VO/Service/DAO/Controller)
+egov-codegen-studio\output\src\main\resources\... ← 쿼리(Mapper XML)
+egov-codegen-studio\output\src\main\webapp\...     ← 화면(JSP)
 ```
 
 폴더를 열어 파일이 잘 만들어졌는지 눈으로 확인하세요.
@@ -117,6 +121,40 @@ egov-crud-gen\output\src\main\webapp\...     ← 화면(JSP)
 
 ---
 
+## STEP 7. (더 쉽게) GUI 화면으로 하기
+
+명령어 대신 마우스로 하고 싶으면 빌드(STEP 1) 후:
+
+```powershell
+.\run-gui.ps1
+```
+
+창이 뜨면:
+1. 왼쪽에 DDL을 붙여넣거나 `[DDL 파일 열기…]`로 불러옵니다.
+2. 위쪽 설정 폼(패키지·모듈·prefix 등)은 `gen.properties` 값으로 미리 채워져 있습니다. 필요한 것만 고치세요.
+3. **출력 폴더**는 `[찾아보기…]`로 탐색기에서 고릅니다. **내 프로젝트 폴더를 고르면 바로 그 안에 만들어집니다.**
+4. `[생성]`을 누르면 오른쪽에 만들어진 파일 목록과 접속 주소가 뜹니다.
+
+> CLI와 똑같은 엔진을 쓰므로 결과물은 동일합니다.
+
+---
+
+## STEP 8. (배포) 설치 프로그램으로 만들기
+
+다른 PC/동료에게 줄 때는 **Java 설치 없이 더블클릭으로 쓰는** 설치본을 만들 수 있습니다.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\package.ps1 -Type exe
+# → package\egov-codegen-studio-1.0.0.exe  (이 파일 하나만 전달하면 됩니다)
+```
+
+받은 사람은 그 `.exe`를 더블클릭 → 설치 → 시작메뉴/바탕화면 아이콘으로 실행하면 됩니다.
+
+> 처음 한 번은 `choco install wixtoolset -y`(관리자) 가 필요합니다.
+> 다른 PC에서 "Windows의 PC 보호" 경고가 뜨면 **"추가 정보 → 실행"**, 또는 **USB로 직접 복사**하면 경고가 안 뜹니다.
+
+---
+
 ## 막히면?
 
 | 이럴 때 | 이렇게 |
@@ -126,5 +164,6 @@ egov-crud-gen\output\src\main\webapp\...     ← 화면(JSP)
 | `Data too long for column` | 입력값이 컬럼 길이보다 김. 특히 `사용여부`엔 `Y` 한 글자만 |
 | 화면은 뜨는데 저장이 안 됨 | DB에 그 테이블을 진짜로 만들었는지 확인 (DDL을 DB에서도 실행) |
 | 채번 등록 오류 | DB에 `IDS` 테이블이 있어야 함 ([USER-GUIDE](./USER-GUIDE.md) 7장) |
+| 배포한 `.exe`가 "Windows의 PC 보호"로 막힘 | **"추가 정보 → 실행"** 클릭, 또는 USB로 직접 복사하면 안 뜸 (미서명 프로그램이라 그렇습니다) |
 
 그래도 막히면 화면에 뜬 **에러 메시지를 그대로 복사**해서 물어보세요.

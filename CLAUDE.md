@@ -8,8 +8,11 @@ eGov 표준프레임워크(검증 5.0.1) CRUD 코드 제너레이터. MySQL DDL 
 ## 빌드 / 실행 / 검증
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build.ps1          # 빌드 → dist\egov-crud-gen.jar
-.\run.ps1 --ddl sample\sample.sql --config gen.properties      # 실행(기본)
-.\run.ps1 --ddl sample\verify.sql --config gen.properties --idgnr   # 채번
+.\run.ps1 --ddl sample\sample.sql --config gen.properties      # CLI 실행(기본)
+.\run.ps1 --ddl sample\verify.sql --config gen.properties --idgnr   # CLI 채번
+.\run-gui.ps1                                                  # Swing GUI 실행
+.\package.ps1            # 배포본(app-image, JRE 내장 폴더)
+.\package.ps1 -Type exe  # .exe 인스톨러(WiX 3.x 필요)
 ```
 - JDK는 번들(`build.ps1`/`run.ps1`이 `$jdkRoot`에서 자동 탐색). Maven 없음.
 - 생성 자바 컴파일 검증은 `.m2` 의존성을 classpath로 사용(MAINTAINER-GUIDE 4장).
@@ -18,7 +21,7 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1          # 빌드 → dist\
 1. **외부 의존성 추가 금지** — 순수 Java만. 새 라이브러리가 꼭 필요하면 사유·대안을 명시하고 합의 후.
 2. **결정적 생성** — 골격 생성에 LLM/난수 쓰지 않는다(균질성).
 3. **`CodeGenerator.render`는 고정점까지 반복** — 중첩 플레이스홀더(`__KEY__` 안의 `__KEY__`) 때문. 1패스로 되돌리지 말 것.
-4. **`module`은 `let/`로 시작** — eGov Mapper 스캔 경로(`mapper/let/**`) 때문.
+4. **Mapper/JSP 출력 루트는 `mapperRoot`/`jspRoot` 설정** — eGov 스캔 경로가 프로젝트마다 달라 변수화(기본 `egovframework/mapper`·`WEB-INF/jsp`). 표준 eGov면 `module`이 `let/`로 시작.
 5. **채번(`--idgnr`)은 String PK 전제**, `cipers = PK길이 − prefix길이`.
 6. **Controller/검증 import는 `jakarta.*`**, JSP taglib은 레거시 `http://java.sun.com/jsp/jstl/core` 유지.
 7. 생성 코드 주석·식별자는 한글 주석 + eGov 네이밍 관례.

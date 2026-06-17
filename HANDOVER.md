@@ -11,7 +11,7 @@
 
 **eGov 표준프레임워크(검증: 5.0.1) 프로젝트에서, MySQL DDL 한 개를 넣으면 CRUD 풀세트(백엔드 6 + Mapper XML + JSP 4)를 자동 생성하는 CLI·GUI 도구.** 순수 Java, 외부 의존성 0.
 
-- 저장소: 로컬 `egov-codegen-studio` (egov-crud-gen 백업본에서 분기, 아직 원격 미연결)
+- 저장소: https://github.com/Ohmneong/egov-codegen-studio (public, `main`) — egov-crud-gen 백업본에서 분기
 - 언어/런타임: Java 17+ (검증은 번들 JDK 21)
 - 빌드 도구: 없음(순수 `javac`/`jar`, `build.ps1` 래퍼)
 
@@ -49,12 +49,32 @@
 7. **문서화** — QUICKSTART/USER-GUIDE/MAINTAINER-GUIDE.
 8. **배포** — GitHub 공개 저장소.
 
-커밋 히스토리:
+이후 **egov-codegen-studio**(GUI 확장판)로 분기해 다음을 진행했습니다:
+
+9. **생성 엔진 분리** — `GenerationService`/`GenerationResult` 추출(CLI/GUI 공유, 콘솔 비의존). `Main`은 얇은 어댑터로 축소.
+10. **Swing GUI** — `GenGuiApp`(`run-gui.ps1`): DDL 입력/파일 열기, 설정 폼, 출력폴더 `[찾아보기]` 탐색기, 채번 체크, 결과 표시.
+11. **파서 보강** — 여러 줄에 걸친 컬럼 정의(`DEFAULT … ON UPDATE …`) 파싱.
+12. **감사 컬럼 관례명** — `created_by/at`·`updated_by/at`도 자동 인식.
+13. **검색 PK 기준** + **생성물 `Egov` 접두어 제거**(라이브러리 클래스는 유지).
+14. **배포본** — jpackage app-image(JRE 내장 폴더) + `.exe` 인스톨러(WiX 3.x), `package.ps1 [-Type exe]`.
+15. **경로 변수화** — `mapperRoot`/`jspRoot` 설정화(프로젝트별 스캔 경로 대응).
+
+커밋 히스토리(최근순):
 ```
-a4f2efc feat: 생성 완료 후 접속 URL 자동 출력 (baseUrl 설정 추가)
-5b156fd docs: 입문자용 QUICKSTART + 실행 래퍼 run.ps1 추가
-d90083e docs: build.ps1 실행 방법 명확화
-b52a5cc feat: eGov 표준프레임워크 CRUD 코드 제너레이터 (초기 구현)
+aea07f8 feat: Mapper/JSP 출력 루트를 설정으로 변수화 (mapperRoot/jspRoot)
+7530125 docs: SmartScreen(미서명 exe) 경고 우회 방법 정리
+7d5ad40 docs: MAINTAINER-GUIDE 7장 배포/재배포 정리
+3df992a feat: .exe 인스톨러 생성 지원 (package.ps1 -Type exe, WiX 3.x)
+4c86c9e feat: jpackage 설치본(app-image) 생성 스크립트 추가
+1351b50 Merge feature/swing-gui: Swing GUI + 파서/감사/검색/네이밍 개선
+a432036 change: 생성물에서 'Egov' 접두어 제거 + 출력폴더 탐색기 선택 버튼
+851465f change: 검색 조건을 PK 기준으로만 제한
+748a25b feat: 관례적 영문 감사 컬럼명 자동 인식
+078411a fix: 여러 줄에 걸친 컬럼 정의 파싱 누락 수정
+6520dd0 feat: Swing GUI 추가 (CLI와 생성 엔진 공유)
+65e7c34 refactor: 생성 핵심을 GenerationService로 추출
+10ed0c5 chore: egov-crud-gen 복사본으로 egov-codegen-studio 시작
+(이전 egov-crud-gen 시절: a4f2efc 접속 URL 자동 출력 … b52a5cc 초기 구현)
 ```
 
 ## 5. 아키텍처 / 소스 맵
@@ -115,15 +135,21 @@ src/com/hanbit/egovgen/
 ## 8. 빌드 · 실행 · 검증 (빠른 시작)
 
 ```powershell
-cd egov-crud-gen
+cd egov-codegen-studio
 # 1) 빌드(최초 1회)
 powershell -ExecutionPolicy Bypass -File .\build.ps1
-# 2) 생성
+# 2) 생성 (CLI)
 .\run.ps1 --ddl sample\sample.sql --config gen.properties            # 기본
 .\run.ps1 --ddl sample\verify.sql --config gen.properties --idgnr     # 채번
+# 2') 또는 GUI로
+.\run-gui.ps1
 # 3) 결과: output\ 폴더 + 콘솔에 접속 URL 출력
+# 4) 배포본
+.\package.ps1            # app-image (JRE 내장 실행 폴더)
+.\package.ps1 -Type exe  # .exe 인스톨러 (WiX 3.x 필요)
 ```
 회귀 검증(수정 후 매번): MAINTAINER-GUIDE 4장 체크리스트.
+> 빌드 시 GUI가 떠 있으면 `dist\*.jar`를 잡아 빌드(jar 교체)가 실패한다 — GUI(javaw)를 닫고 빌드할 것.
 
 ## 9. 남은 일 / 다음 단계 (우선순위 순)
 
@@ -134,8 +160,10 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 | 2차 | 다른 DB 파서(Oracle 등) | `DdlParser` 구현 + `mapperXml`의 DB별 SQL 분기(`LIMIT`/`SYSDATE()`) |
 | 추후 | 화면 플랫폼(eXBuilder/WebSquare) | 화면 생성을 `ViewGenerator` 인터페이스로 분리 후 구현 추가 |
 | 추후 | AI 보조 | 사내 폐쇄망 LLM(CLI) 연동, 컬럼 코멘트→라벨/검색조건 추론. `LlmAssist` 인터페이스 |
-| 개선 | 검색 select 라벨 채우기 | 목록 화면 검색 select 옵션이 비어 있음 |
-| 개선 | 등록자/수정자 ID 서버 연동 | 감사 시점(_PNTTM)은 SYSDATE() 자동·감사컬럼 폼 제외 완료. 등록자/수정자 ID만 Controller의 LoginVO 연동 남음 |
+| 개선 | 등록자/수정자 ID 서버 연동 | 감사 시점은 `SYSDATE()` 자동·감사컬럼 폼 제외 완료. 등록자/수정자 ID만 Controller의 LoginVO 연동 남음 |
+| 개선 | 배포본 코드 서명 | 미서명 `.exe`는 SmartScreen 경고. 사내 자체서명+신뢰 루트 또는 상용 인증서로 `signtool` 서명(`package.ps1`에 단계 추가 가능) |
+
+> **이번에 처리(과거 "남은 일"에서 완료)**: Swing GUI, 감사 컬럼 관례명 인식, 검색 PK 기준, `Egov` 접두어 제거, `mapperRoot`/`jspRoot` 변수화, 설치본(app-image)/`.exe` 인스톨러.
 
 ## 10. 이어받는 사람 체크리스트 (처음 할 일)
 
@@ -165,7 +193,10 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 - **WTP 배포 깨짐**: 이클립스 컴파일은 되는데 톰캣 배포본 `WEB-INF/classes`가 빔 → `mvn clean package`로 안 됨, **서버 Clean/모듈 재등록**이 답.
 - `CHAR(1)` 입력 초과(`USE_AT`엔 `Y` 한 글자). 폼은 `maxlength`로 제한됨.
 - 채번 시 PK는 `VARCHAR`, `IDS` 테이블 필요.
+- **여러 줄 컬럼 정의**(`DEFAULT … ON UPDATE …`): `splitTopLevel` 조각의 공백을 정규화하지 않으면 그 컬럼이 통째로 누락됨(파서 정규식의 `.`이 줄바꿈 비매칭).
+- **GUI가 jar를 잠금**: GUI(javaw)가 떠 있으면 `build.ps1`의 jar 교체가 실패 → GUI 종료 후 빌드.
+- **미서명 `.exe`는 SmartScreen 차단**: "추가 정보→실행" / 속성 차단 해제 / USB 복사(MOTW 미부착)로 우회. 근본 해결은 코드 서명.
 
 ---
 
-_최종 업데이트 기준 커밋: `a4f2efc`. 이 문서는 프로젝트 상태가 크게 바뀌면 함께 갱신하세요._
+_최종 업데이트 기준 커밋: `aea07f8` (egov-codegen-studio). 이 문서는 프로젝트 상태가 크게 바뀌면 함께 갱신하세요._

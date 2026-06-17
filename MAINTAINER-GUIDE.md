@@ -24,18 +24,23 @@ DDL 텍스트 → [DdlParser] → TableMeta/ColumnMeta(메타모델) → [CodeGe
 
 ```
 src/com/hanbit/egovgen/
-├─ Main.java                  CLI 진입점. 인자 파싱(parseArgs), 파서 선택(selectParser), 실행 오케스트레이션
-├─ config/GenConfig.java      설정 로드(properties) + CLI 덮어쓰기(override). 적응형 설정의 단일 출처
+├─ Main.java                  CLI 진입점(얇은 어댑터). 인자 파싱(parseArgs) + 파일 읽기 → GenerationService 호출 → 콘솔/URL 출력
+├─ config/GenConfig.java      설정 로드(properties) + CLI 덮어쓰기(override) + GUI 폼 주입(setXxx). 적응형 설정의 단일 출처
 ├─ model/
-│  ├─ ColumnMeta.java         컬럼 1개 메타(컬럼명/필드명/자바타입/PK/코멘트/size) + label(), searchable()
-│  └─ TableMeta.java          테이블 메타(엔티티명 + 컬럼 목록) + primaryKey(), searchableColumns()
+│  ├─ ColumnMeta.java         컬럼 1개 메타(컬럼명/필드명/자바타입/PK/코멘트/size) + label(), searchable(), isAudit()/isAuditTimestamp()/isUpdateTimestamp()
+│  └─ TableMeta.java          테이블 메타(엔티티명 + 컬럼 목록) + primaryKey(), searchableColumns()(현재 PK 기준)
 ├─ parser/
 │  ├─ DdlParser.java          파서 인터페이스 (parse, dbType) — DB별 교체 지점
-│  └─ MySqlDdlParser.java     MySQL CREATE TABLE 정규식 파서
-└─ gen/
-   ├─ NameUtil.java           snake↔camel↔Pascal, 테이블명→엔티티명
-   ├─ TypeMapper.java         DDL 타입 → 자바 타입 매핑, size 추출
-   └─ CodeGenerator.java      ★ 템플릿 + 파일 생성 (가장 자주 수정하는 곳)
+│  └─ MySqlDdlParser.java     MySQL CREATE TABLE 정규식 파서(여러 줄 컬럼 정의 지원)
+├─ gen/
+│  ├─ NameUtil.java           snake↔camel↔Pascal, 테이블명→엔티티명
+│  ├─ TypeMapper.java         DDL 타입 → 자바 타입 매핑, size 추출
+│  └─ CodeGenerator.java      ★ 템플릿 + 파일 생성 (가장 자주 수정하는 곳)
+├─ service/
+│  ├─ GenerationService.java  파서 선택(selectParser) + 파싱 + 생성 + URL 조립. CLI/GUI 공유, 콘솔 비의존
+│  └─ GenerationResult.java   생성 결과 DTO(파싱 메타·파일 목록·접속 URL)
+└─ ui/
+   └─ GenGuiApp.java          Swing GUI 진입점(JDK 내장만 사용). GenerationService 호출
 ```
 
 ### CodeGenerator 내부 구조 (가장 중요)
@@ -43,6 +48,10 @@ src/com/hanbit/egovgen/
 - `base(TableMeta)` — 모든 템플릿이 공유하는 치환 변수 맵(`LinkedHashMap`)을 만든다. **새 플레이스홀더는 여기에 추가.**
 - `render(tpl, vars)` — `__KEY__`를 값으로 치환. **고정점까지 반복**하므로 값 안에 또 다른 `__KEY__`가 있어도 해결됨.
 - 산출물별 메서드: `domainVo`, `searchVo`, `serviceInterface`, `serviceImpl`, `dao`, `controller`, `mapperXml`, `jspList`, `jspDetail`, `jspForm`, `idgnrBeanXml`.
+- 출력 경로: `generate()`에서 `cfg.mapperRoot()`/`cfg.jspRoot()`로 Mapper·JSP 루트를 조립한다(설정 변수화 — 5장·`gen.properties`).
+- 생성물 클래스명/파일명/URL에는 `Egov` 접두어를 붙이지 않는다(엔티티명 그대로). `EgovIdGnrService`·`EgovAbstractMapper` 등은 eGov **라이브러리** 클래스라 별개로 유지된다.
+
+> 진입점 분리: 파서 선택→파싱→생성→URL 조립은 `service/GenerationService`에 있고 `CodeGenerator`는 파일 생성만 한다. CLI(`Main`)·GUI(`GenGuiApp`)는 둘 다 `GenerationService`를 호출한다.
 
 ---
 
@@ -61,11 +70,13 @@ src/com/hanbit/egovgen/
 `TypeMapper.toJava()`의 `switch`에 케이스 추가. 예: `bit`/`boolean` → `"String"` 또는 `"boolean"`.
 
 ### 3-3. 새 설정 항목 추가 (적응형 설정 확장)
-1. `GenConfig`에 필드 + getter 추가.
-2. `load()`에 `p.getProperty(...)` 한 줄, 필요하면 `override()`에 CLI 키 추가.
+`mapperRoot`/`jspRoot` 추가가 최신 예시다(전 경로에 걸쳐 손대는 항목 참고).
+1. `GenConfig`에 필드 + getter + GUI 폼 주입용 setter(`setXxx`) 추가.
+2. `load()`에 `p.getProperty(...)` 한 줄, `override()`에 CLI 키 추가.
 3. `Main`에서 `cfg.override("키", opt.get("키"))` (CLI로 받을 경우).
-4. `CodeGenerator.base()` 또는 해당 템플릿에서 사용.
-5. `gen.properties`와 `USER-GUIDE.md`에 항목 문서화.
+4. GUI에 노출하려면 `GenGuiApp`에 입력 필드 + `buildSettingsPanel()` 행 + `loadConfigIntoForm()`/`onGenerate()` 연결.
+5. `CodeGenerator`(경로 조립 또는 `base()`/템플릿)에서 사용.
+6. `gen.properties`와 `USER-GUIDE.md`에 항목 문서화.
 
 ### 3-4. 새 공통 컴포넌트 옵션 (검증/메시지/로깅 등)
 채번(`useIdgnr`)이 모범 사례다. 동일 패턴:
@@ -76,7 +87,7 @@ src/com/hanbit/egovgen/
 
 ### 3-5. 새 DB 파서 추가 (Oracle/PostgreSQL 등)
 1. `DdlParser`를 구현하는 `OracleDdlParser` 작성(`dbType()`="oracle").
-2. `Main.selectParser()`의 `switch`에 `case "oracle" -> new OracleDdlParser();`.
+2. `GenerationService.selectParser()`의 `switch`에 `case "oracle" -> new OracleDdlParser();`.
 3. Mapper XML의 DB 종속 SQL(페이징 `LIMIT/OFFSET`, `SYSDATE()` 등)은 `CodeGenerator.mapperXml`에서 `dbType`별로 분기 필요. **현재 MySQL 전용이므로 여기 분기 추가가 핵심 작업.**
 
 ### 3-6. 새 화면 플랫폼 (eXBuilder/WebSquare)
@@ -88,6 +99,14 @@ src/com/hanbit/egovgen/
 - prefix/자리수 규칙: `CodeGenerator.base()`의 `IDGNR_PREFIX`, `IDGNR_CIPERS` 계산.
   - **불변식**: `prefix길이 + cipers = PK컬럼 길이`. (eGov `EgovIdGnrStrategyImpl`의 `cipers`는 "숫자 자리수"이고 prefix는 별도)
 - 정수 채번이 필요하면 `getNextIntegerId()` + strategy 없는 빈으로 분기(현재 미구현).
+
+### 3-8. 감사 컬럼 규칙 조정
+등록자/등록시점/수정자/수정시점은 화면 입력에서 빼고, 시점은 `SYSDATE()`로 자동 채운다.
+- 판정은 `ColumnMeta`의 세 메서드: `isAudit()`(폼 입력 제외 여부), `isAuditTimestamp()`(INSERT 시 `SYSDATE()`), `isUpdateTimestamp()`(UPDATE 시에도 `SYSDATE()`). eGov 표준명(`FRST_REGIST_PNTTM` 등)과 관례명(`created_at`/`updated_at`/`created_by`/`updated_by`)을 모두 처리.
+- 인식 컬럼명을 늘리려면 이 세 메서드의 집합만 고치면 INSERT/UPDATE/폼이 일관 적용된다(`CodeGenerator.mapperXml`·`jspForm`이 이 판정을 사용).
+
+### 3-9. 검색 대상 컬럼 조정
+목록 검색 조건은 `TableMeta.searchableColumns()`가 결정한다. **현재는 PK 기준**(`isPrimaryKey`)이다. 범위를 넓히려면 이 필터를 `ColumnMeta.searchable()`(문자열·비PK) 등으로 바꾼다. `CodeGenerator.mapperXml`이 이 목록으로 `searchCondition` 동적조건을 만든다.
 
 ---
 
@@ -132,10 +151,10 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
 | 채번 | `org.egovframe.rte.fdl.idgnr.*` + `IDS` 테이블 | `context-idgen.xml` |
 | Java / 네임스페이스 | Java 17, **jakarta.*** (javax 아님) | `pom.xml` |
 | 컴포넌트 스캔 | `base-package="egovframework"` | `context-common.xml` |
-| Mapper 스캔 | `mapper/let/**/*_${DbType}.xml` | `context-mapper.xml` |
+| Mapper 스캔 | `mapper/let/**/*_${DbType}.xml` (프로젝트별로 다름 → `gen.properties`의 `mapperRoot`/`module`로 맞춤) | `context-mapper.xml` |
 | 컨텍스트 로딩 | `classpath*:egovframework/spring/com/context-*.xml` | `web.xml` |
 
-> **다른 eGov 버전으로 이식 시**: 이 표의 값들을 대상 프로젝트에서 다시 확인하고, `gen.properties`의 `daoBase`/`serviceBase`/`paginationInfo` 및 `module` 규칙을 맞춰라. 이게 "프로젝트 적응형"의 실체다.
+> **다른 eGov 버전/프로젝트로 이식 시**: 이 표의 값들을 대상 프로젝트에서 다시 확인하고, `gen.properties`의 `daoBase`/`serviceBase`/`paginationInfo`, 그리고 Mapper·JSP 스캔·출력 경로(`mapperRoot`/`jspRoot`/`module`)를 맞춰라. 이게 "프로젝트 적응형"의 실체다.
 
 ---
 
@@ -149,6 +168,8 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
 6. **`CHAR(1)` 입력** — 폼 input에 `maxlength` 적용됨. 새 입력 위젯 추가 시 size 반영 유지.
 7. **인코딩** — 소스/생성물 UTF-8. PowerShell `Set-Content -Encoding utf8`은 BOM을 붙이므로 argfile엔 `[IO.File]::WriteAllLines` 사용.
 8. **CRLF 경고**는 무해(Windows). 필요하면 `.gitattributes`로 정책화.
+9. **여러 줄 컬럼 정의** — `DEFAULT ... ON UPDATE ...`처럼 한 컬럼이 여러 줄에 걸치면, `MySqlDdlParser`가 `splitTopLevel` 조각의 공백(줄바꿈)을 한 칸으로 정규화해 파싱한다. 컬럼 정규식의 `.`은 줄바꿈을 안 먹으므로 이 정규화를 빼면 컬럼이 누락된다.
+10. **GUI가 jar를 잠금** — `run-gui.ps1`로 띄운 GUI(`javaw`)가 `dist\egov-crud-gen.jar`를 물고 있으면 `build.ps1`/`package.ps1`이 jar 교체에 실패한다. 빌드·패키징 전 GUI 프로세스를 종료할 것.
 
 ---
 
@@ -218,7 +239,10 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
 | 2차 | 다른 DB 파서 | 3-5 참고 |
 | 추후 | 화면 플랫폼(eXBuilder/WebSquare) | 3-6 참고 |
 | 추후 | AI 보조(라벨/검색조건 추론) | 사내 LLM CLI 연동 인터페이스 `LlmAssist` |
-| 개선 | 검색 select 라벨 채우기, 시각/등록자 컬럼 `SYSDATE()` 자동 | `jspList`, `mapperXml` |
+| 개선 | 등록자/수정자 ID 서버(LoginVO) 연동 | `controller` (감사 시점 `SYSDATE()`·폼 제외·검색 PK 기준은 완료) |
+| 개선 | 목록 검색 select 옵션 라벨 채우기 | `jspList` |
+
+> 완료: Swing GUI·설치본(app-image/.exe), 감사 컬럼 자동 처리(표준명+관례명), 검색 PK 기준, `Egov` 접두어 제거, Mapper/JSP 경로 변수화(`mapperRoot`/`jspRoot`).
 
 ---
 
@@ -233,3 +257,4 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql --config gen.properties
 # 4. (필요시) 컴파일 검증 → 톰캣 1회 구동
 # 5. 문서 동기화 후 feature 브랜치 커밋
 ```
+> GUI로 확인하려면 `run-gui.ps1`(빌드 후), 배포본은 `package.ps1`(app-image) / `package.ps1 -Type exe`(인스톨러 — 7장). GUI가 떠 있으면 jar 잠금으로 빌드가 막히니 먼저 종료.

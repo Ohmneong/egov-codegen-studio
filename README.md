@@ -1,6 +1,8 @@
-# egov-crud-gen
+# egov-codegen-studio
 
-eGov 표준프레임워크(5.0.1) CRUD 풀세트 코드 생성기. **외부 의존성 0, 순수 Java(텍스트 블록 템플릿)** 로 작성되어 번들 JDK만으로 빌드·실행된다. 폐쇄망에 그대로 복사해 쓸 수 있다.
+eGov 표준프레임워크(5.0.1) CRUD 풀세트 코드 생성기. **외부 의존성 0, 순수 Java(텍스트 블록 템플릿)** 로 작성되어 번들 JDK만으로 빌드·실행된다. 폐쇄망에 그대로 복사해 쓸 수 있다. **CLI와 Swing GUI** 두 방식으로 쓸 수 있고, JRE를 내장한 **설치본(.exe)** 까지 만들 수 있다.
+
+- 원격: https://github.com/Ohmneong/egov-codegen-studio (public). CLI 전용 `egov-crud-gen`에서 분기한 GUI 확장판.
 
 ## 📖 문서 안내
 - **[HANDOVER.md](./HANDOVER.md)** — 프로젝트를 이어받는 분용. 전체 그림·작업 경과·설계 결정·남은 일 (먼저 읽기 권장)
@@ -31,6 +33,9 @@ java -jar dist\egov-crud-gen.jar --ddl sample\sample.sql --config gen.properties
 | `--module <경로>` | 모듈 경로 (예: `sym/cal`) |
 | `--prefix <prefix>` | 엔티티명 도출 시 제거할 테이블 prefix |
 | `--out <디렉터리>` | 출력 루트 (기본 `./output`) |
+| `--mapperRoot <경로>` | Mapper XML 출력/스캔 루트 (기본 `egovframework/mapper`) |
+| `--jspRoot <경로>` | JSP 출력 루트 (기본 `WEB-INF/jsp`) |
+| `--idgnr` | 채번 적용 (String PK일 때만 동작) |
 
 ### GUI로 실행 (Swing)
 
@@ -40,7 +45,7 @@ CLI 대신 화면에서 입력·생성할 수도 있다. 같은 생성 엔진(`G
 powershell -ExecutionPolicy Bypass -File run-gui.ps1
 ```
 
-DDL을 붙여넣거나 파일로 열고, 설정 폼(시작 시 `gen.properties`로 채워짐)을 조정한 뒤 `[생성]`을 누르면 파일 목록과 접속 URL이 표시된다. (Swing은 JDK 내장 — 추가 의존성 없음)
+DDL을 붙여넣거나 파일로 열고, 설정 폼(시작 시 `gen.properties`로 채워짐)을 조정한 뒤 `[생성]`을 누르면 파일 목록과 접속 URL이 표시된다. 출력 폴더는 `[찾아보기…]`로 탐색기에서 고를 수 있다(대상 eGov 프로젝트 루트를 고르면 `src/main/...`에 바로 병합). (Swing은 JDK 내장 — 추가 의존성 없음)
 
 ### 설치본/인스톨러 만들기
 
@@ -89,7 +94,7 @@ src/com/hanbit/egovgen/
 
 ## 1차(MVP) 범위와 한계 — 정직하게
 
-**됨**: MySQL DDL 1개 파싱 → 백엔드 6 + Mapper XML + JSP 4 생성, 논리삭제(USE_AT) 자동 분기, 코멘트→한글 라벨, 적응형 설정.
+**됨**: MySQL DDL 1개 파싱(여러 줄 컬럼 정의 포함) → 백엔드 6 + Mapper XML + JSP 4 생성, 논리삭제(USE_AT) 자동 분기, 코멘트→한글 라벨, 감사 컬럼(eGov 표준명 + 관례명 `created_by/at`·`updated_by/at`) 폼 입력 제외·시점 `SYSDATE()` 자동, 검색조건 PK 기준, 생성물 클래스/파일명 `Egov` 접두어 없음, 적응형 설정(`mapperRoot`/`jspRoot` 포함). **CLI·GUI 두 방식 + JRE 내장 설치본(.exe).**
 
 **아직 안 됨 (2차/추후)**:
 - **생성 자바 코드의 컴파일은 이 도구만으로 검증 불가** — eGov 의존성(spring/jakarta/commons-lang3/rte) 클래스패스가 필요. 실제 eGov 프로젝트(예: bp.enter)에 산출물을 넣고 컴파일해야 최종 확인된다. **이게 1차 MVP의 핵심 검증 단계다.**
@@ -97,5 +102,6 @@ src/com/hanbit/egovgen/
 - 엑셀/CSV 일괄 입력 — POI 의존성 회피 위해 2차로 미룸.
 - MySQL 외 DB 파서 — `DdlParser` 인터페이스만 열려 있음.
 - AI 보조(라벨/검색조건 추론) — `LlmAssist` 미구현.
-- 등록자/시각 컬럼(FRST_REGIST_PNTTM 등) 자동 `SYSDATE()` 처리 — 현재는 일반 컬럼과 동일 매핑.
-- 검색조건 select의 옵션 라벨 — JSP 목록 화면 select가 비어 있어 컬럼 라벨 채우기 필요.
+- 등록자/수정자 ID 서버 연동 — 감사 시점은 `SYSDATE()` 자동·폼 제외 완료, ID는 Controller `LoginVO` 연동 미구현.
+- 검색조건 select의 옵션 라벨 — JSP 목록 화면 검색 select 옵션이 비어 있음(검색 동작 자체는 PK 기준).
+- 코드 서명 — 배포 `.exe`가 미서명이라 다른 PC에서 SmartScreen 경고(우회는 USER-GUIDE 트러블슈팅 참고).
