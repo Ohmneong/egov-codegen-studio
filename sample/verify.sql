@@ -1,0 +1,8 @@
+-- 컴파일/런타임 검증 전용 DDL (채번 적용 = String PK)
+CREATE TABLE `LETTN_GEN_SAMPLE` (
+    `SAMPLE_ID` VARCHAR(20)  NOT NULL COMMENT '샘플ID',
+    `SAMPLE_NM` VARCHAR(100) NOT NULL COMMENT '샘플명',
+    `SAMPLE_DC` VARCHAR(500)          COMMENT '샘플설명',
+    `USE_AT`    CHAR(1)      DEFAULT 'Y' COMMENT '사용여부',
+    PRIMARY KEY (`SAMPLE_ID`)
+);

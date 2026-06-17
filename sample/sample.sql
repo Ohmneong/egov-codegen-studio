@@ -1,0 +1,10 @@
+-- 테스트용 샘플 DDL (MySQL)
+CREATE TABLE IF NOT EXISTS `LETTNRESTDE` (
+    `RESTDE_NO`   INT          NOT NULL COMMENT '휴일일련번호',
+    `RESTDE_DE`   VARCHAR(20)  NOT NULL COMMENT '휴일일자',
+    `RESTDE_NM`   VARCHAR(100) NOT NULL COMMENT '휴일명',
+    `RESTDE_DC`   VARCHAR(2000)         COMMENT '휴일설명',
+    `USE_AT`      CHAR(1)      DEFAULT 'Y' COMMENT '사용여부',
+    `FRST_REGISTER_ID` VARCHAR(20)      COMMENT '최초등록자ID',
+    PRIMARY KEY (`RESTDE_NO`)
+);

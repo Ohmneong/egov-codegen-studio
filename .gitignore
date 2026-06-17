@@ -1,0 +1,14 @@
+# 빌드 산출물 (소스에서 재생성 가능)
+build/
+dist/
+output/
+verify-output/
+*.class
+*.jar
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+Thumbs.db
+.DS_Store
