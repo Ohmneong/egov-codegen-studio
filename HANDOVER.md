@@ -35,6 +35,10 @@
 - ✅ 검색 조건은 **PK 기준**으로 생성(이전 문자열 컬럼 전체에서 축소)
 - ✅ 여러 줄에 걸친 컬럼 정의(`DEFAULT … ON UPDATE …`)도 파싱
 - ⚙ (변경) 생성물 클래스명/파일명/URL에서 **`Egov` 접두어 제거** (eGov 라이브러리 클래스는 유지)
+- ✅ **여러 테이블 일괄 생성**: DDL 하나에 `CREATE TABLE`이 여럿이면 각각 생성(`parseAll`/`generateAll`)
+- ✅ **설정 프로파일(GUI)**: 프로파일 바(콤보 + 저장/불러오기)로 프로젝트별 `gen.properties`를 `profiles/`에 저장·전환
+- ✅ **생성 미리보기 + 덮어쓰기 경고(GUI)**: `[미리보기]`로 생성 예정 파일·기존 덮어쓸 파일 확인, `[생성]` 시 기존 파일 있으면 확인 다이얼로그
+- ✅ **FK·Y/N 드롭다운**: 여부 컬럼(`CHAR(1)`+`_AT`/`_YN`)은 등록/수정 폼에 Y/N `select`, FK 컬럼(`REFERENCES`)은 `select`(옵션 데이터는 수동 연동)
 
 ## 4. 지금까지 한 작업 (경과)
 
@@ -58,9 +62,19 @@
 13. **검색 PK 기준** + **생성물 `Egov` 접두어 제거**(라이브러리 클래스는 유지).
 14. **배포본** — jpackage app-image(JRE 내장 폴더) + `.exe` 인스톨러(WiX 3.x), `package.ps1 [-Type exe]`.
 15. **경로 변수화** — `mapperRoot`/`jspRoot` 설정화(프로젝트별 스캔 경로 대응).
+16. **문서 전체 최신화** — README/QUICKSTART/USER-GUIDE/MAINTAINER/HANDOVER/CLAUDE.
+17. **여러 테이블 일괄 생성** — `parseAll`/`generateAll`, DDL 하나에 여러 `CREATE TABLE`.
+18. **설정 프로파일(GUI)** — `profiles/` 저장·전환, `GenConfig.saveTo`.
+19. **생성 미리보기 + 덮어쓰기 경고(GUI)** — `CodeGenerator.build`(경로/내용 분리)·`GenerationService.preview`/`PreviewEntry`.
+20. **FK·Y/N 드롭다운** — `ColumnMeta.isYesNo()`/`fkTable`, 파서 `REFERENCES` 인식, `jspForm` `select` 분기.
 
 커밋 히스토리(최근순):
 ```
+2483cb6 feat: FK·Y/N 여부 컬럼을 등록/수정 폼 드롭다운으로 생성
+67a4f45 feat: 생성 미리보기 + 덮어쓰기 경고
+067bf9a feat: GUI 설정 프로파일 (프로젝트별 gen.properties 저장/전환)
+285feb8 feat: 여러 테이블 일괄 생성 (DDL 안의 모든 CREATE TABLE)
+c8e0c99 docs: 전체 문서 오늘 작업까지 최신화
 aea07f8 feat: Mapper/JSP 출력 루트를 설정으로 변수화 (mapperRoot/jspRoot)
 7530125 docs: SmartScreen(미서명 exe) 경고 우회 방법 정리
 7d5ad40 docs: MAINTAINER-GUIDE 7장 배포/재배포 정리
@@ -88,17 +102,17 @@ src/com/hanbit/egovgen/
 ├─ Main.java                  CLI 진입점. 인자 파싱, 파서 선택, 실행 + 결과/URL 출력
 ├─ config/GenConfig.java      설정 로드(gen.properties) + CLI 덮어쓰기. 적응형 설정의 단일 출처
 ├─ model/
-│  ├─ ColumnMeta.java         컬럼 메타 + label(), searchable(), isAudit()/isAuditTimestamp()/isUpdateTimestamp()
+│  ├─ ColumnMeta.java         컬럼 메타 + label(), searchable(), 감사 판정, isYesNo()/fkTable(FK·드롭다운 판정)
 │  └─ TableMeta.java          테이블 메타 + primaryKey(), searchableColumns()(현재 PK 기준)
 ├─ parser/
-│  ├─ DdlParser.java          파서 인터페이스 (DB 교체 지점)
-│  └─ MySqlDdlParser.java     MySQL 정규식 파서
+│  ├─ DdlParser.java          파서 인터페이스(parse/parseAll) — DB 교체 지점
+│  └─ MySqlDdlParser.java     MySQL 정규식 파서. parseAll(여러 테이블), FK(REFERENCES) 인식
 ├─ gen/
 │  ├─ NameUtil.java           snake↔camel↔Pascal, 테이블명→엔티티명
 │  ├─ TypeMapper.java         DDL 타입 → Java 타입, size 추출
-│  └─ CodeGenerator.java      ★ 템플릿 + 파일 생성 (가장 자주 수정)
-├─ service/                   GenerationService·GenerationResult (CLI/GUI 공유 생성 엔진, 콘솔 비의존)
-└─ ui/                        GenGuiApp (Swing GUI 진입점)
+│  └─ CodeGenerator.java      ★ 템플릿 + 파일 생성. build(경로/내용 맵)·generate(쓰기) 분리, jspForm 드롭다운 분기
+├─ service/                   GenerationService(generateAll·preview)·GenerationResult·PreviewEntry (CLI/GUI 공유, 콘솔 비의존)
+└─ ui/                        GenGuiApp (Swing GUI 진입점: 프로파일 바·미리보기·드롭다운)
 ```
 
 `CodeGenerator`가 핵심: `generate()`(산출물 목록), `base()`(공통 치환변수), `render()`(치환), 산출물별 메서드(`domainVo`/`serviceImpl`/`mapperXml`/`jspList` 등). 자세한 수정법은 **MAINTAINER-GUIDE 2·3장**.
@@ -156,14 +170,15 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 | 우선순위 | 항목 | 메모 |
 |---|---|---|
 | 2차 | **재생성(round-trip) 전략** | 현재는 덮어쓰기. 손수정 코드 보존 위해 diff/패치 출력 필요. **도구 수명 직결** |
-| 2차 | 엑셀/CSV 일괄 입력 | 여러 테이블 한 번에. POI는 의존성0 원칙과 충돌 → CSV 우선 검토 |
+| 2차 | 엑셀/CSV 일괄 입력 | **DDL 안 여러 `CREATE TABLE`은 이미 지원**(`parseAll`). 엑셀/CSV 입력은 추후(POI는 의존성0 충돌 → CSV 우선) |
 | 2차 | 다른 DB 파서(Oracle 등) | `DdlParser` 구현 + `mapperXml`의 DB별 SQL 분기(`LIMIT`/`SYSDATE()`) |
 | 추후 | 화면 플랫폼(eXBuilder/WebSquare) | 화면 생성을 `ViewGenerator` 인터페이스로 분리 후 구현 추가 |
 | 추후 | AI 보조 | 사내 폐쇄망 LLM(CLI) 연동, 컬럼 코멘트→라벨/검색조건 추론. `LlmAssist` 인터페이스 |
+| 개선 | FK 옵션 데이터 자동 연동 | FK 컬럼은 `select` 골격까지 생성. 참조 테이블 목록 조회로 `option` 채우기는 수동(런타임 데이터) |
 | 개선 | 등록자/수정자 ID 서버 연동 | 감사 시점은 `SYSDATE()` 자동·감사컬럼 폼 제외 완료. 등록자/수정자 ID만 Controller의 LoginVO 연동 남음 |
 | 개선 | 배포본 코드 서명 | 미서명 `.exe`는 SmartScreen 경고. 사내 자체서명+신뢰 루트 또는 상용 인증서로 `signtool` 서명(`package.ps1`에 단계 추가 가능) |
 
-> **이번에 처리(과거 "남은 일"에서 완료)**: Swing GUI, 감사 컬럼 관례명 인식, 검색 PK 기준, `Egov` 접두어 제거, `mapperRoot`/`jspRoot` 변수화, 설치본(app-image)/`.exe` 인스톨러.
+> **이번에 처리(과거 "남은 일"에서 완료)**: Swing GUI, 감사 컬럼 관례명 인식, 검색 PK 기준, `Egov` 접두어 제거, `mapperRoot`/`jspRoot` 변수화, 설치본(app-image)/`.exe` 인스톨러, **여러 테이블 일괄 생성, 설정 프로파일(GUI), 생성 미리보기/덮어쓰기 경고, FK·Y/N 드롭다운**.
 
 ## 10. 이어받는 사람 체크리스트 (처음 할 일)
 
@@ -199,4 +214,4 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 
 ---
 
-_최종 업데이트 기준 커밋: `aea07f8` (egov-codegen-studio). 이 문서는 프로젝트 상태가 크게 바뀌면 함께 갱신하세요._
+_최종 업데이트 기준 커밋: `2483cb6` (egov-codegen-studio). 이 문서는 프로젝트 상태가 크게 바뀌면 함께 갱신하세요._

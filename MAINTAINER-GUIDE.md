@@ -27,27 +27,31 @@ src/com/hanbit/egovgen/
 ├─ Main.java                  CLI 진입점(얇은 어댑터). 인자 파싱(parseArgs) + 파일 읽기 → GenerationService 호출 → 콘솔/URL 출력
 ├─ config/GenConfig.java      설정 로드(properties) + CLI 덮어쓰기(override) + GUI 폼 주입(setXxx). 적응형 설정의 단일 출처
 ├─ model/
-│  ├─ ColumnMeta.java         컬럼 1개 메타(컬럼명/필드명/자바타입/PK/코멘트/size) + label(), searchable(), isAudit()/isAuditTimestamp()/isUpdateTimestamp()
+│  ├─ ColumnMeta.java         컬럼 1개 메타(컬럼명/필드명/자바타입/PK/코멘트/size/fkTable) + label(), searchable(), isAudit()/isAuditTimestamp()/isUpdateTimestamp(), isYesNo()/isForeignKey()
 │  └─ TableMeta.java          테이블 메타(엔티티명 + 컬럼 목록) + primaryKey(), searchableColumns()(현재 PK 기준)
 ├─ parser/
-│  ├─ DdlParser.java          파서 인터페이스 (parse, dbType) — DB별 교체 지점
-│  └─ MySqlDdlParser.java     MySQL CREATE TABLE 정규식 파서(여러 줄 컬럼 정의 지원)
+│  ├─ DdlParser.java          파서 인터페이스 (parse, parseAll, dbType) — DB별 교체 지점
+│  └─ MySqlDdlParser.java     MySQL 정규식 파서(여러 줄 컬럼·한 DDL 다중 CREATE TABLE·FK REFERENCES 파싱)
 ├─ gen/
 │  ├─ NameUtil.java           snake↔camel↔Pascal, 테이블명→엔티티명
 │  ├─ TypeMapper.java         DDL 타입 → 자바 타입 매핑, size 추출
 │  └─ CodeGenerator.java      ★ 템플릿 + 파일 생성 (가장 자주 수정하는 곳)
 ├─ service/
 │  ├─ GenerationService.java  파서 선택(selectParser) + 파싱 + 생성 + URL 조립. CLI/GUI 공유, 콘솔 비의존
-│  └─ GenerationResult.java   생성 결과 DTO(파싱 메타·파일 목록·접속 URL)
+│  │                          generate(단일)·generateAll(다중 테이블)·preview(생성 전 미리보기) 제공
+│  ├─ GenerationResult.java   생성 결과 DTO(파싱 메타·파일 목록·접속 URL)
+│  └─ PreviewEntry.java       미리보기 항목 DTO(생성될 경로 + 기존 존재 여부)
 └─ ui/
-   └─ GenGuiApp.java          Swing GUI 진입점(JDK 내장만 사용). GenerationService 호출
+   └─ GenGuiApp.java          Swing GUI 진입점(JDK 내장만 사용). 프로파일 바·미리보기·생성, GenerationService 호출
 ```
 
 ### CodeGenerator 내부 구조 (가장 중요)
-- `generate(TableMeta)` — 산출물 경로 계산 + 각 템플릿 메서드 호출 + 파일 쓰기. **산출물을 추가/제거하려면 여기.**
+- `build(TableMeta)` — 산출물 (파일경로 → 내용) 맵(`LinkedHashMap`)을 만든다(파일 쓰기 없음). **산출물을 추가/제거하려면 여기.** 미리보기(`GenerationService.preview`)도 이 맵의 경로를 재사용한다.
+- `generate(TableMeta)` — `build()` 결과를 순회하며 파일을 쓴다(경로 목록 반환).
 - `base(TableMeta)` — 모든 템플릿이 공유하는 치환 변수 맵(`LinkedHashMap`)을 만든다. **새 플레이스홀더는 여기에 추가.**
 - `render(tpl, vars)` — `__KEY__`를 값으로 치환. **고정점까지 반복**하므로 값 안에 또 다른 `__KEY__`가 있어도 해결됨.
 - 산출물별 메서드: `domainVo`, `searchVo`, `serviceInterface`, `serviceImpl`, `dao`, `controller`, `mapperXml`, `jspList`, `jspDetail`, `jspForm`, `idgnrBeanXml`.
+- `jspForm` 입력 위젯: 기본 `<input>`이나, Y/N 여부 컬럼(`isYesNo`)은 Y/N `<select>`, FK 컬럼(`isForeignKey`)은 참조 테이블 `<select>`(옵션은 수동 연동)로 분기.
 - 출력 경로: `generate()`에서 `cfg.mapperRoot()`/`cfg.jspRoot()`로 Mapper·JSP 루트를 조립한다(설정 변수화 — 5장·`gen.properties`).
 - 생성물 클래스명/파일명/URL에는 `Egov` 접두어를 붙이지 않는다(엔티티명 그대로). `EgovIdGnrService`·`EgovAbstractMapper` 등은 eGov **라이브러리** 클래스라 별개로 유지된다.
 
@@ -107,6 +111,14 @@ src/com/hanbit/egovgen/
 
 ### 3-9. 검색 대상 컬럼 조정
 목록 검색 조건은 `TableMeta.searchableColumns()`가 결정한다. **현재는 PK 기준**(`isPrimaryKey`)이다. 범위를 넓히려면 이 필터를 `ColumnMeta.searchable()`(문자열·비PK) 등으로 바꾼다. `CodeGenerator.mapperXml`이 이 목록으로 `searchCondition` 동적조건을 만든다.
+
+### 3-10. 등록/수정 폼 입력 위젯(드롭다운 등) 추가
+`CodeGenerator.jspForm`의 분기에서 결정한다. 현재 Y/N 여부 컬럼(`ColumnMeta.isYesNo()` — CHAR(1) + 이름이 `_AT`/`_YN`)은 Y/N `<select>`, FK 컬럼(`isForeignKey()` — `MySqlDdlParser`가 `FOREIGN KEY ... REFERENCES`/인라인 `REFERENCES`로 `fkTable` 채움)은 `<select>`로 만든다. 새 위젯 규칙은 `ColumnMeta`에 판정 메서드를 추가하고 `jspForm`에 분기를 더한다. (FK `<select>` 옵션을 실제 데이터로 채우는 건 런타임 조회라 현재는 골격만 — 8장 로드맵.)
+
+### 3-11. 여러 테이블 일괄 / 미리보기 / 설정 프로파일
+- **여러 테이블**: `MySqlDdlParser.parseAll`이 한 DDL의 모든 `CREATE TABLE`을 파싱(`parseBody`로 본문 파싱 분리), `GenerationService.generateAll`이 테이블별로 생성한다(`Main`·`GenGuiApp`이 결과 목록 출력). 단일 `parse`/`generate`는 첫 테이블 위임.
+- **미리보기/덮어쓰기**: `GenerationService.preview`가 `CodeGenerator.build()`의 경로로 `PreviewEntry`(경로 + 기존 존재 여부) 목록을 만든다. GUI `[미리보기]`와 생성 전 덮어쓰기 확인에 쓴다.
+- **설정 프로파일(GUI)**: `GenConfig.saveTo(Path)`로 현재 설정을 properties로 저장하고, `GenGuiApp`이 `profiles/` 폴더를 콤보박스로 전환한다.
 
 ---
 
@@ -235,14 +247,15 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
 | 우선순위 | 항목 | 작업 위치 |
 |---|---|---|
 | 2차 | 재생성(round-trip) diff 전략 | `generate()` — 기존 파일 비교/패치 출력 |
-| 2차 | 엑셀/CSV 일괄 입력 | 새 입력 어댑터 + `Main` (POI는 의존성 0 원칙과 충돌 → CSV 우선 검토) |
+| 2차 | 엑셀/CSV 일괄 입력 | 새 입력 어댑터 + `Main` (한 DDL의 다중 테이블은 `parseAll`로 완료. POI는 의존성 0 충돌 → CSV 우선 검토) |
 | 2차 | 다른 DB 파서 | 3-5 참고 |
 | 추후 | 화면 플랫폼(eXBuilder/WebSquare) | 3-6 참고 |
 | 추후 | AI 보조(라벨/검색조건 추론) | 사내 LLM CLI 연동 인터페이스 `LlmAssist` |
+| 개선 | FK 드롭다운 옵션 자동 채우기 | `jspForm`/연관 조회 (현재 FK는 `<select>` 골격만, 옵션은 수동 — 3-10) |
 | 개선 | 등록자/수정자 ID 서버(LoginVO) 연동 | `controller` (감사 시점 `SYSDATE()`·폼 제외·검색 PK 기준은 완료) |
 | 개선 | 목록 검색 select 옵션 라벨 채우기 | `jspList` |
 
-> 완료: Swing GUI·설치본(app-image/.exe), 감사 컬럼 자동 처리(표준명+관례명), 검색 PK 기준, `Egov` 접두어 제거, Mapper/JSP 경로 변수화(`mapperRoot`/`jspRoot`).
+> 완료: Swing GUI·설치본(app-image/.exe), 감사 컬럼 자동 처리(표준명+관례명), 검색 PK 기준, `Egov` 접두어 제거, Mapper/JSP 경로 변수화(`mapperRoot`/`jspRoot`), **여러 테이블 일괄 생성(`parseAll`/`generateAll`), GUI 설정 프로파일, 생성 미리보기·덮어쓰기 경고, FK·Y/N 드롭다운**.
 
 ---
 

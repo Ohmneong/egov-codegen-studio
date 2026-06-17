@@ -85,6 +85,9 @@ CREATE TABLE `LETTNRESTDE` (
 
 > **채번(useIdgnr=true)을 쓸 거라면 PK를 `VARCHAR`로 정의하세요.** eGov 채번은 `RESTDE_0000…` 형태의 String ID를 만듭니다. (정수 PK는 보통 MySQL `AUTO_INCREMENT`가 더 적합합니다.)
 
+> **여러 테이블 한 번에**: DDL 파일 하나에 `CREATE TABLE`을 여러 개 넣으면 **각 테이블이 모두 생성**됩니다. 테이블 수십 개를 한 파일로 일괄 처리할 수 있습니다.
+> **FK·여부 컬럼은 드롭다운**: `FOREIGN KEY ... REFERENCES`로 선언한 컬럼과 `CHAR(1)` 여부 컬럼(이름이 `_AT`/`_YN`으로 끝남, 예 `USE_AT`/`use_yn`)은 등록/수정 폼이 `<select>`로 생성됩니다(6번 참고).
+
 ---
 
 ## 5. 생성 실행
@@ -101,6 +104,8 @@ $java = "C:\eGovFrameDev-5.0.1-Windows-64bit\eclipse\plugins\...\jre\bin\java.ex
 ```
 
 `--out`을 프로젝트 루트로 주면 `src/main/java`, `src/main/resources`, `src/main/webapp` 구조에 **그대로 병합**됩니다(새 패키지라 기존 파일과 충돌하지 않습니다).
+
+> DDL 파일에 `CREATE TABLE`이 여러 개면 **모든 테이블이 일괄 생성**되고, 테이블별로 파싱 요약·파일 목록·접속 URL이 차례로 출력됩니다.
 
 ### 옵션 레퍼런스
 
@@ -126,10 +131,12 @@ $java = "C:\eGovFrameDev-5.0.1-Windows-64bit\eclipse\plugins\...\jre\bin\java.ex
 powershell -ExecutionPolicy Bypass -File .\run-gui.ps1
 ```
 
+- **상단 프로파일 바**: 프로젝트마다 다른 설정을 `profiles/` 폴더에 저장해두고 전환합니다. 콤보박스에서 고르고 `[불러오기]`, 현재 폼을 `[현재 설정 저장…]`(이름 입력)으로 저장합니다.
 - 시작 시 작업 폴더의 `gen.properties` 값이 설정 폼에 자동으로 채워집니다.
-- 좌측에 DDL을 붙여넣거나 `[DDL 파일 열기…]`로 불러오고, 설정 폼(패키지·모듈·prefix·DB·출력경로·baseUrl·`mapperRoot`/`jspRoot`·채번)을 조정합니다.
+- 좌측에 DDL을 붙여넣거나 `[DDL 파일 열기…]`로 불러오고, 설정 폼(패키지·모듈·prefix·DB·출력경로·baseUrl·`mapperRoot`/`jspRoot`·채번)을 조정합니다. (DDL에 `CREATE TABLE`이 여러 개면 모두 생성됩니다.)
 - **출력 루트는 `[찾아보기…]`** 로 탐색기에서 폴더를 직접 고를 수 있습니다(eGov 프로젝트 루트를 고르면 바로 병합).
-- `[생성]`을 누르면 우측에 파싱 요약·생성 파일 목록·접속 URL이 표시됩니다.
+- `[미리보기]`는 생성하지 않고 **만들어질 파일 목록과 기존 파일(덮어씀) 여부**를 우측에 보여줍니다.
+- `[생성]`을 누르면 우측에 파싱 요약·생성 파일 목록·접속 URL이 표시됩니다. **기존 파일이 있으면 덮어쓰기 확인**을 먼저 묻습니다.
 - `[설정 다시 불러오기]`는 폼을 `gen.properties` 값으로 되돌립니다.
 
 > 내부적으로 CLI와 **같은 생성 엔진**을 호출하므로 산출물은 명령행 실행과 동일합니다. 추가 설치물은 없습니다(Swing은 JDK 내장).
@@ -160,6 +167,7 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 - **컴포넌트 스캔**: `base-package="egovframework"` → `egovframework.*` 패키지면 자동 등록
 - **Mapper XML**: 출력 경로(`{mapperRoot}/{module}`)가 프로젝트 MyBatis 스캔 패턴과 맞으면 자동 로드 (표준 eGov는 `egovframework/mapper/let/**`)
 - **채번 빈**: `spring/com/context-*.xml` 패턴 → `context-idgen-{entity}.xml` 자동 로드 (수동 등록 불필요)
+- **폼 입력 위젯**: 여부 컬럼(`CHAR(1)` + 이름 `_AT`/`_YN`, 예 `USE_AT`/`use_yn`)은 `Y/N` 드롭다운, FK 컬럼(`REFERENCES`로 선언)은 드롭다운으로 생성 (FK 드롭다운의 실제 옵션 항목은 10번 참고 — 수동 연동)
 
 ---
 
@@ -214,6 +222,7 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 - **DB**: MySQL만. 다른 DB는 `DdlParser` 인터페이스로 확장.
 - **엑셀 일괄 입력**: 미지원(POI 의존성 회피). 1차는 DDL 파일 단건.
 - **검색 조건은 PK 기준**: 현재 목록 검색은 PK 컬럼만 조건으로 생성한다(이전엔 문자열 컬럼 전체). 다른 컬럼으로 검색하려면 생성된 Mapper/JSP를 손보거나 검색 정책(`TableMeta.searchableColumns()`)을 넓혀야 함.
+- **FK 드롭다운 옵션**: FK 컬럼은 `<select>`로 생성되지만, 옵션 항목(참조 테이블의 실제 데이터)은 자동으로 채우지 않는다(런타임 조회 필요). 생성된 화면/컨트롤러에서 참조 테이블 목록을 조회해 채워야 함.
 - **감사 컬럼 자동 처리**: eGov 표준 감사 컬럼(`FRST_REGISTER_ID`/`FRST_REGIST_PNTTM`/`LAST_UPDUSR_ID`/`LAST_UPDT_PNTTM`)과 **관례적 영문 컬럼명(`created_by`/`created_at`/`updated_by`/`updated_at`, 대소문자 무관)** 을 인식한다. 등록·수정 화면에서 입력칸을 제외하고, **등록시점은 INSERT 시·수정시점은 INSERT/UPDATE 시 `SYSDATE()`** 로 자동 입력. 단 **등록자/수정자 ID는 서버 로그인 연동 미구현**이라 채워지지 않음(필요 시 Controller에서 LoginVO로 set).
 - 등록/수정 폼 입력칸 옆에 **데이터 타입·길이**(예: `VARCHAR(200)`)가 표시됨.
 

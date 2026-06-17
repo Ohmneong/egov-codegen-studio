@@ -32,7 +32,7 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1          # 빌드 → dist\
 - `model/` — `TableMeta`, `ColumnMeta` (중간 메타모델)
 - `parser/` — `DdlParser`(인터페이스), `MySqlDdlParser`
 - `gen/` — `NameUtil`, `TypeMapper`, **`CodeGenerator`(템플릿+생성, 가장 자주 수정)**
-- `service/` — `GenerationService`(파서선택→파싱→생성, 콘솔 비의존), `GenerationResult`(결과 DTO). **CLI/GUI 공유 진입점**
+- `service/` — `GenerationService`(파서선택→파싱→생성, 멀티테이블 `generateAll`·미리보기 `preview`, 콘솔 비의존), `GenerationResult`/`PreviewEntry`(결과 DTO). **CLI/GUI 공유 진입점**
 - `ui/` — `GenGuiApp`(Swing GUI). 같은 `GenerationService` 호출. Swing은 JDK 내장(의존성 0 유지)
 
 ## 수정 시 워크플로
