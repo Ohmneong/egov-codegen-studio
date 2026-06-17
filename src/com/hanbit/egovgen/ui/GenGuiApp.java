@@ -9,6 +9,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * eGov CRUD 코드 제너레이터 GUI (Swing).
@@ -206,8 +207,11 @@ public class GenGuiApp {
             cfg.setJspRoot(jspRootField.getText().trim());
             cfg.setUseIdgnr(idgnrCheck.isSelected());
 
-            GenerationResult r = new GenerationService().generate(cfg, ddl);
-            resultArea.setText(formatResult(r));
+            List<GenerationResult> results = new GenerationService().generateAll(cfg, ddl);
+            StringBuilder sb = new StringBuilder();
+            if (results.size() > 1) sb.append("■ ").append(results.size()).append("개 테이블 일괄 생성\n\n");
+            for (GenerationResult r : results) sb.append(formatResult(r)).append('\n');
+            resultArea.setText(sb.toString());
             resultArea.setCaretPosition(0);
         } catch (IllegalArgumentException ex) {
             // 파서/설정 입력 오류 (예: 지원하지 않는 DB, DDL 형식)

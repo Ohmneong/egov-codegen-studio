@@ -8,6 +8,7 @@ import com.hanbit.egovgen.parser.MySqlDdlParser;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,18 +29,30 @@ public class GenerationService {
      * @throws IOException 산출물 파일 쓰기 실패 시
      */
     public GenerationResult generate(GenConfig cfg, String ddl) throws IOException {
+        // 단일 호환용 — 첫 테이블만 반환
+        return generateAll(cfg, ddl).get(0);
+    }
+
+    /**
+     * DDL 안의 <b>모든</b> 테이블을 생성한다(여러 CREATE TABLE 일괄 처리).
+     * @return 테이블별 생성 결과 목록(입력 순서)
+     */
+    public List<GenerationResult> generateAll(GenConfig cfg, String ddl) throws IOException {
         DdlParser parser = selectParser(cfg.dbType());
-        TableMeta table = parser.parse(ddl, cfg.tablePrefix());
+        List<TableMeta> tables = parser.parseAll(ddl, cfg.tablePrefix());
 
         CodeGenerator gen = new CodeGenerator(cfg);
-        List<Path> files = gen.generate(table);
-
         Path outputDir = Path.of(cfg.outputDir()).toAbsolutePath();
-        String urlBase = cfg.baseUrl() + "/" + cfg.module() + "/" + table.getEntityName();
-        return new GenerationResult(
-                table, files, outputDir,
-                urlBase + "List.do",
-                urlBase + "RegistView.do");
+        List<GenerationResult> results = new ArrayList<>();
+        for (TableMeta table : tables) {
+            List<Path> files = gen.generate(table);
+            String urlBase = cfg.baseUrl() + "/" + cfg.module() + "/" + table.getEntityName();
+            results.add(new GenerationResult(
+                    table, files, outputDir,
+                    urlBase + "List.do",
+                    urlBase + "RegistView.do"));
+        }
+        return results;
     }
 
     /** 파서 선택 (DB 교체 지점). 1차는 mysql만 지원. */

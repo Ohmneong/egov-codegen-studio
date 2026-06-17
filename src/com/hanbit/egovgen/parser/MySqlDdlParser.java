@@ -5,12 +5,15 @@ import com.hanbit.egovgen.gen.TypeMapper;
 import com.hanbit.egovgen.model.ColumnMeta;
 import com.hanbit.egovgen.model.TableMeta;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * MySQL CREATE TABLE 문 파서 (정규식 기반).
- * 지원: 백틱 식별자, 타입(size), NOT NULL, COMMENT '...', PRIMARY KEY (...).
+ * 지원: 백틱 식별자, 타입(size), NOT NULL, COMMENT '...', PRIMARY KEY (...), 여러 줄 컬럼 정의,
+ *      한 DDL 안의 여러 CREATE TABLE(일괄 생성).
  * 미지원(1차): FK/INDEX/복합 제약 상세 — 파싱 시 무시한다.
  */
 public class MySqlDdlParser implements DdlParser {
@@ -34,30 +37,41 @@ public class MySqlDdlParser implements DdlParser {
 
     @Override
     public TableMeta parse(String ddl, String tablePrefix) {
+        // 첫 번째 테이블만 (parseAll 이 비면 예외를 던진다)
+        return parseAll(ddl, tablePrefix).get(0);
+    }
+
+    @Override
+    public List<TableMeta> parseAll(String ddl, String tablePrefix) {
+        List<TableMeta> tables = new ArrayList<>();
         Matcher tm = TABLE.matcher(ddl);
-        if (!tm.find()) {
+        while (tm.find()) {
+            String tableName = tm.group(1);
+            // 테이블명 다음 '(' 부터 짝이 맞는 ')' 까지가 본문
+            int bodyStart = ddl.indexOf('(', tm.end() - 1);
+            int bodyEnd = lastMatchingParen(ddl, bodyStart);
+            if (bodyStart < 0 || bodyEnd < 0) continue;
+            String body = ddl.substring(bodyStart + 1, bodyEnd);
+            TableMeta table = parseBody(tableName, body, tablePrefix);
+            if (!table.getColumns().isEmpty()) tables.add(table);
+        }
+        if (tables.isEmpty()) {
             throw new IllegalArgumentException("CREATE TABLE 문을 찾을 수 없습니다. DDL을 확인하세요.");
         }
-        String tableName = tm.group(1);
+        return tables;
+    }
 
+    /** 테이블 본문(괄호 안)을 파싱해 TableMeta 한 개로 변환. */
+    private TableMeta parseBody(String tableName, String body, String tablePrefix) {
         TableMeta table = new TableMeta();
         table.setTableName(tableName);
         table.setEntityName(NameUtil.entityFromTable(tableName, tablePrefix));
 
-        // 괄호 본문 추출 (테이블명 다음 '(' 부터 마지막 매칭 ')' 까지)
-        int bodyStart = ddl.indexOf('(', tm.end() - 1);
-        int bodyEnd = lastMatchingParen(ddl, bodyStart);
-        if (bodyStart < 0 || bodyEnd < 0) {
-            throw new IllegalArgumentException("테이블 본문 괄호를 해석하지 못했습니다.");
-        }
-        String body = ddl.substring(bodyStart + 1, bodyEnd);
-
-        // PK 컬럼명 집합 먼저 수집
+        // PK 컬럼명 먼저 수집
         String pkColumn = null;
         Matcher pkm = PK.matcher(body);
         if (pkm.find()) {
-            String first = pkm.group(1).split(",")[0].trim().replace("`", "");
-            pkColumn = first;
+            pkColumn = pkm.group(1).split(",")[0].trim().replace("`", "");
         }
 
         // 컬럼 정의를 최상위 콤마 기준으로 분리
@@ -94,10 +108,6 @@ public class MySqlDdlParser implements DdlParser {
             if (com.find()) col.setComment(com.group(1).replace("\\'", "'"));
 
             table.addColumn(col);
-        }
-
-        if (table.getColumns().isEmpty()) {
-            throw new IllegalArgumentException("컬럼을 한 개도 추출하지 못했습니다. DDL 형식을 확인하세요.");
         }
         return table;
     }

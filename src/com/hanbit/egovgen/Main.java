@@ -8,6 +8,7 @@ import com.hanbit.egovgen.service.GenerationService;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,23 +60,30 @@ public class Main {
             }
             String ddl = Files.readString(ddlFile);
 
-            // 생성 (파서 선택·파싱·생성은 GUI와 공유하는 서비스가 담당)
-            GenerationResult result = new GenerationService().generate(cfg, ddl);
+            // 생성 (파서 선택·파싱·생성은 GUI와 공유하는 서비스가 담당). DDL에 여러 테이블이면 모두 생성.
+            List<GenerationResult> results = new GenerationService().generateAll(cfg, ddl);
 
-            TableMeta table = result.table();
-            System.out.println("[파싱] 테이블 " + table.getTableName()
-                    + " → 엔티티 " + table.getEntityName()
-                    + " (컬럼 " + table.getColumns().size() + "개, PK="
-                    + (table.primaryKey() != null ? table.primaryKey().getColumnName() : "없음") + ")");
+            if (results.size() > 1) {
+                System.out.println("[테이블] " + results.size() + "개 일괄 생성");
+                System.out.println();
+            }
+            for (GenerationResult result : results) {
+                TableMeta table = result.table();
+                System.out.println("[파싱] 테이블 " + table.getTableName()
+                        + " → 엔티티 " + table.getEntityName()
+                        + " (컬럼 " + table.getColumns().size() + "개, PK="
+                        + (table.primaryKey() != null ? table.primaryKey().getColumnName() : "없음") + ")");
 
-            System.out.println("[생성 완료] " + result.files().size() + "개 파일 → " + result.outputDir());
-            for (Path f : result.files()) System.out.println("  - " + f);
+                System.out.println("[생성 완료] " + result.files().size() + "개 파일 → " + result.outputDir());
+                for (Path f : result.files()) System.out.println("  - " + f);
 
-            // 접속 URL 안내 (톰캣 기동 후 바로 쓸 수 있게)
-            System.out.println();
-            System.out.println("[접속 URL] 톰캣 기동 후 브라우저에서 (포트/컨텍스트는 환경에 맞게):");
-            System.out.println("  목록  " + result.listUrl());
-            System.out.println("  등록  " + result.registUrl());
+                // 접속 URL 안내 (톰캣 기동 후 바로 쓸 수 있게)
+                System.out.println();
+                System.out.println("[접속 URL] 톰캣 기동 후 브라우저에서 (포트/컨텍스트는 환경에 맞게):");
+                System.out.println("  목록  " + result.listUrl());
+                System.out.println("  등록  " + result.registUrl());
+                System.out.println();
+            }
 
         } catch (IllegalArgumentException e) {
             System.err.println("[입력 오류] " + e.getMessage());
