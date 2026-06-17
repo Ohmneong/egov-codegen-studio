@@ -14,6 +14,7 @@ public class ColumnMeta {
     private boolean notNull;     // NOT NULL 여부
     private boolean primaryKey;  // PK 여부
     private String comment;      // 컬럼 코멘트 → 한글 라벨로 사용
+    private String fkTable;      // FK 참조 테이블 (REFERENCES 로 파싱, 없으면 null)
 
     public String getColumnName() { return columnName; }
     public void setColumnName(String columnName) { this.columnName = columnName; }
@@ -85,6 +86,18 @@ public class ColumnMeta {
         if (c == null) return false;
         return c.equals("LAST_UPDT_PNTTM") || c.equals("UPDATED_AT");
     }
+
+    /** Y/N 여부 컬럼(드롭다운 대상). CHAR(1) 성격이고 이름이 _AT/_YN 으로 끝난다(USE_AT, use_yn 등). */
+    public boolean isYesNo() {
+        if (columnName == null || size != 1 || primaryKey) return false;
+        String c = upperColumn();
+        return c.endsWith("_AT") || c.endsWith("_YN");
+    }
+
+    /** FK 참조 테이블(없으면 null). 있으면 등록/수정 폼을 드롭다운으로 만든다. */
+    public String getFkTable() { return fkTable; }
+    public void setFkTable(String fkTable) { this.fkTable = fkTable; }
+    public boolean isForeignKey() { return fkTable != null && !fkTable.isBlank(); }
 
     private String upperColumn() {
         return columnName == null ? null : columnName.toUpperCase();

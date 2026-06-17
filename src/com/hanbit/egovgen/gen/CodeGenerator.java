@@ -718,6 +718,22 @@ public class CodeGenerator {
                     .append(c.getFieldName()).append("}\"/>")
                     .append("<input type=\"hidden\" name=\"").append(c.getFieldName())
                     .append("\" value=\"").append(valExpr).append("\"/>");
+            } else if (c.isYesNo()) {
+                // Y/N 여부 컬럼 → 드롭다운 (수정 화면은 현재값 selected)
+                String ent = decap(t.getEntityName()), fld = c.getFieldName();
+                String selY = modify ? " ${" + ent + "." + fld + " == 'Y' ? 'selected' : ''}" : "";
+                String selN = modify ? " ${" + ent + "." + fld + " == 'N' ? 'selected' : ''}" : "";
+                rows.append("<select name=\"").append(fld).append("\">")
+                    .append("<option value=\"Y\"").append(selY).append(">Y(예)</option>")
+                    .append("<option value=\"N\"").append(selN).append(">N(아니오)</option>")
+                    .append("</select>");
+            } else if (c.isForeignKey()) {
+                // FK 컬럼 → 드롭다운. 옵션은 참조 테이블 목록 조회로 채운다(연동은 수동).
+                rows.append("<select name=\"").append(c.getFieldName()).append("\">")
+                    .append("<option value=\"\">선택</option>")
+                    .append("</select>");
+                rows.append(" <span style=\"color:#888;font-size:0.85em\">FK → ").append(c.getFkTable())
+                    .append(" (목록 조회로 option 채우기)</span>");
             } else {
                 String maxlen = c.getSize() > 0 ? " maxlength=\"" + c.getSize() + "\"" : "";
                 rows.append("<input type=\"text\" name=\"").append(c.getFieldName())

@@ -14,5 +14,6 @@ CREATE TABLE product (
     category_id   BIGINT COMMENT '분류 ID',
     use_yn        CHAR(1) DEFAULT 'Y' COMMENT '사용 여부(Y/N)',
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '등록일시',
-    PRIMARY KEY (product_id)
+    PRIMARY KEY (product_id),
+    FOREIGN KEY (category_id) REFERENCES category(category_id)
 );

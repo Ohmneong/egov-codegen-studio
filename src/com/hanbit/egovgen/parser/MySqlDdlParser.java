@@ -6,7 +6,9 @@ import com.hanbit.egovgen.model.ColumnMeta;
 import com.hanbit.egovgen.model.TableMeta;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +33,14 @@ public class MySqlDdlParser implements DdlParser {
 
     private static final Pattern PK =
             Pattern.compile("PRIMARY\\s+KEY\\s*\\(([^)]*)\\)", Pattern.CASE_INSENSITIVE);
+
+    // 테이블 레벨 FK: FOREIGN KEY (col) REFERENCES reftbl
+    private static final Pattern FK =
+            Pattern.compile("FOREIGN\\s+KEY\\s*\\(\\s*`?([A-Za-z0-9_]+)`?\\s*\\)\\s+REFERENCES\\s+`?([A-Za-z0-9_]+)`?",
+                    Pattern.CASE_INSENSITIVE);
+    // 인라인 FK: <컬럼정의> ... REFERENCES reftbl
+    private static final Pattern INLINE_REF =
+            Pattern.compile("REFERENCES\\s+`?([A-Za-z0-9_]+)`?", Pattern.CASE_INSENSITIVE);
 
     @Override
     public String dbType() { return "mysql"; }
@@ -74,6 +84,11 @@ public class MySqlDdlParser implements DdlParser {
             pkColumn = pkm.group(1).split(",")[0].trim().replace("`", "");
         }
 
+        // FK 컬럼 → 참조 테이블 (테이블 레벨 FOREIGN KEY ... REFERENCES)
+        Map<String, String> fkMap = new HashMap<>();
+        Matcher fkm = FK.matcher(body);
+        while (fkm.find()) fkMap.put(fkm.group(1).toUpperCase(), fkm.group(2));
+
         // 컬럼 정의를 최상위 콤마 기준으로 분리
         for (String raw : splitTopLevel(body)) {
             // 컬럼 정의가 여러 줄에 걸칠 수 있어(예: DEFAULT ... ON UPDATE ...) 공백(줄바꿈 포함)을
@@ -106,6 +121,14 @@ public class MySqlDdlParser implements DdlParser {
 
             Matcher com = COMMENT.matcher(rest);
             if (com.find()) col.setComment(com.group(1).replace("\\'", "'"));
+
+            // FK: 테이블 레벨 매핑 우선, 없으면 컬럼 정의의 인라인 REFERENCES
+            String fk = fkMap.get(colName.toUpperCase());
+            if (fk == null) {
+                Matcher ir = INLINE_REF.matcher(rest);
+                if (ir.find()) fk = ir.group(1);
+            }
+            if (fk != null) col.setFkTable(fk);
 
             table.addColumn(col);
         }
