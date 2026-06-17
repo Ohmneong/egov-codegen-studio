@@ -60,6 +60,27 @@ public class GenConfig {
         return c;
     }
 
+    /** 현재 설정을 properties 파일로 저장(GUI 프로파일 저장용). */
+    public void saveTo(Path file) throws IOException {
+        Properties p = new Properties();
+        p.setProperty("basePackage", basePackage);
+        p.setProperty("module", module);
+        p.setProperty("tablePrefix", tablePrefix);
+        p.setProperty("dbType", dbType);
+        p.setProperty("outputDir", outputDir);
+        p.setProperty("useIdgnr", String.valueOf(useIdgnr));
+        p.setProperty("baseUrl", baseUrl);
+        p.setProperty("mapperRoot", mapperRoot);
+        p.setProperty("jspRoot", jspRoot);
+        p.setProperty("daoBase", daoBase);
+        p.setProperty("serviceBase", serviceBase);
+        p.setProperty("paginationInfo", paginationInfo);
+        if (file.getParent() != null) Files.createDirectories(file.getParent());
+        try (java.io.OutputStream out = Files.newOutputStream(file)) {
+            p.store(out, "egov-codegen-studio profile");
+        }
+    }
+
     /** CLI 인자로 개별 항목 덮어쓰기. */
     public void override(String key, String value) {
         if (value == null) return;

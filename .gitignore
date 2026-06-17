@@ -4,6 +4,7 @@ dist/
 output/
 verify-output/
 package/
+profiles/
 *.class
 *.jar
 

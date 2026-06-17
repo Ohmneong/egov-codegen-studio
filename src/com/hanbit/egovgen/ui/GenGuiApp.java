@@ -39,6 +39,9 @@ public class GenGuiApp {
 
     /** 시작 시·생성 시 기본 베이스로 쓰는 설정 파일(작업폴더 기준). 없으면 내장 기본값 사용. */
     private final Path defaultConfig = Path.of("gen.properties");
+    /** 프로파일(프로젝트별 설정) 저장 폴더. */
+    private final Path profileDir = Path.of("profiles");
+    private JComboBox<String> profileCombo;
 
     private JFrame frame;
 
@@ -59,7 +62,10 @@ public class GenGuiApp {
         frame.setLocationByPlatform(true);
         frame.setLayout(new BorderLayout(8, 8));
 
-        frame.add(buildSettingsPanel(), BorderLayout.NORTH);
+        JPanel north = new JPanel(new BorderLayout());
+        north.add(buildProfileBar(), BorderLayout.NORTH);
+        north.add(buildSettingsPanel(), BorderLayout.CENTER);
+        frame.add(north, BorderLayout.NORTH);
         frame.add(buildCenter(), BorderLayout.CENTER);
         frame.add(buildSouth(), BorderLayout.SOUTH);
 
@@ -188,6 +194,73 @@ public class GenGuiApp {
         }
     }
 
+    // ── 설정 프로파일 (프로젝트별 gen.properties 저장/전환) ──────────
+
+    private JPanel buildProfileBar() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        p.setBorder(BorderFactory.createTitledBorder("설정 프로파일 (프로젝트별 gen.properties)"));
+        profileCombo = new JComboBox<>();
+        refreshProfiles();
+        JButton load = new JButton("불러오기");
+        load.addActionListener(e -> loadSelectedProfile());
+        JButton save = new JButton("현재 설정 저장…");
+        save.addActionListener(e -> saveCurrentProfile());
+        p.add(new JLabel("프로파일:"));
+        p.add(profileCombo);
+        p.add(load);
+        p.add(save);
+        return p;
+    }
+
+    /** profiles 폴더의 *.properties 를 콤보박스에 채운다. */
+    private void refreshProfiles() {
+        profileCombo.removeAllItems();
+        if (!Files.isDirectory(profileDir)) return;
+        try (var s = Files.list(profileDir)) {
+            s.map(f -> f.getFileName().toString())
+             .filter(n -> n.endsWith(".properties"))
+             .sorted()
+             .forEach(n -> profileCombo.addItem(n.substring(0, n.length() - ".properties".length())));
+        } catch (IOException ex) {
+            error("프로파일 목록을 읽지 못했습니다:\n" + ex.getMessage());
+        }
+    }
+
+    private void loadSelectedProfile() {
+        Object sel = profileCombo.getSelectedItem();
+        if (sel == null) { error("불러올 프로파일이 없습니다. 먼저 '현재 설정 저장'으로 만드세요."); return; }
+        loadConfigIntoForm(profileDir.resolve(sel + ".properties"));
+    }
+
+    private void saveCurrentProfile() {
+        String name = JOptionPane.showInputDialog(frame, "프로파일 이름:", "현재 설정 저장", JOptionPane.PLAIN_MESSAGE);
+        if (name == null || name.isBlank()) return;
+        name = name.trim().replaceAll("[\\\\/:*?\"<>|]", "_"); // 파일명 안전화
+        try {
+            formToConfig().saveTo(profileDir.resolve(name + ".properties"));
+            refreshProfiles();
+            profileCombo.setSelectedItem(name);
+            JOptionPane.showMessageDialog(frame, "저장됨: profiles/" + name + ".properties");
+        } catch (IOException ex) {
+            error("프로파일 저장 실패:\n" + ex.getMessage());
+        }
+    }
+
+    /** 현재 폼 입력값을 GenConfig 로 만든다(기본 설정을 베이스로 폼값 덮어쓰기). */
+    private GenConfig formToConfig() throws IOException {
+        GenConfig cfg = GenConfig.load(Files.exists(defaultConfig) ? defaultConfig : null);
+        cfg.setBasePackage(pkgField.getText().trim());
+        cfg.setModule(moduleField.getText().trim());
+        cfg.setTablePrefix(prefixField.getText().trim());
+        cfg.setDbType(dbTypeField.getText().trim());
+        cfg.setOutputDir(outDirField.getText().trim());
+        cfg.setBaseUrl(baseUrlField.getText().trim());
+        cfg.setMapperRoot(mapperRootField.getText().trim());
+        cfg.setJspRoot(jspRootField.getText().trim());
+        cfg.setUseIdgnr(idgnrCheck.isSelected());
+        return cfg;
+    }
+
     private void onGenerate() {
         String ddl = ddlArea.getText();
         if (ddl == null || ddl.isBlank()) {
@@ -195,18 +268,8 @@ public class GenGuiApp {
             return;
         }
         try {
-            // gen.properties를 베이스로 읽고(공통컴포넌트 베이스 등 폼 밖 값 보존) 폼값을 덮어쓴다.
-            GenConfig cfg = GenConfig.load(Files.exists(defaultConfig) ? defaultConfig : null);
-            cfg.setBasePackage(pkgField.getText().trim());
-            cfg.setModule(moduleField.getText().trim());
-            cfg.setTablePrefix(prefixField.getText().trim());
-            cfg.setDbType(dbTypeField.getText().trim());
-            cfg.setOutputDir(outDirField.getText().trim());
-            cfg.setBaseUrl(baseUrlField.getText().trim());
-            cfg.setMapperRoot(mapperRootField.getText().trim());
-            cfg.setJspRoot(jspRootField.getText().trim());
-            cfg.setUseIdgnr(idgnrCheck.isSelected());
-
+            // 현재 폼값으로 설정 구성 → 생성
+            GenConfig cfg = formToConfig();
             List<GenerationResult> results = new GenerationService().generateAll(cfg, ddl);
             StringBuilder sb = new StringBuilder();
             if (results.size() > 1) sb.append("■ ").append(results.size()).append("개 테이블 일괄 생성\n\n");
