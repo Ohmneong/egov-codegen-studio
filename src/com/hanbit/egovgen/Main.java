@@ -1,19 +1,20 @@
 package com.hanbit.egovgen;
 
 import com.hanbit.egovgen.config.GenConfig;
-import com.hanbit.egovgen.gen.CodeGenerator;
 import com.hanbit.egovgen.model.TableMeta;
-import com.hanbit.egovgen.parser.DdlParser;
-import com.hanbit.egovgen.parser.MySqlDdlParser;
+import com.hanbit.egovgen.service.GenerationResult;
+import com.hanbit.egovgen.service.GenerationService;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * eGov CRUD 코드 제너레이터 CLI 진입점.
+ *
+ * 인자 파싱 → 설정 로드 → DDL 파일 읽기까지가 여기 책임이고, 실제 생성은
+ * {@link GenerationService}가 한다(GUI와 공유). 이 클래스는 그 결과를 콘솔에 출력한다.
  *
  * 사용법:
  *   java -jar egov-crud-gen.jar --ddl sample.sql [옵션]
@@ -56,29 +57,23 @@ public class Main {
             }
             String ddl = Files.readString(ddlFile);
 
-            // 파서 선택 (1차 mysql 고정, 확장 지점)
-            DdlParser parser = selectParser(cfg.dbType());
+            // 생성 (파서 선택·파싱·생성은 GUI와 공유하는 서비스가 담당)
+            GenerationResult result = new GenerationService().generate(cfg, ddl);
 
-            TableMeta table = parser.parse(ddl, cfg.tablePrefix());
+            TableMeta table = result.table();
             System.out.println("[파싱] 테이블 " + table.getTableName()
                     + " → 엔티티 " + table.getEntityName()
                     + " (컬럼 " + table.getColumns().size() + "개, PK="
                     + (table.primaryKey() != null ? table.primaryKey().getColumnName() : "없음") + ")");
 
-            CodeGenerator gen = new CodeGenerator(cfg);
-            List<Path> files = gen.generate(table);
-
-            System.out.println("[생성 완료] " + files.size() + "개 파일 → " + Path.of(cfg.outputDir()).toAbsolutePath());
-            for (Path f : files) System.out.println("  - " + f);
+            System.out.println("[생성 완료] " + result.files().size() + "개 파일 → " + result.outputDir());
+            for (Path f : result.files()) System.out.println("  - " + f);
 
             // 접속 URL 안내 (톰캣 기동 후 바로 쓸 수 있게)
-            String base = cfg.baseUrl();
-            String mod = cfg.module();
-            String ent = table.getEntityName();
             System.out.println();
             System.out.println("[접속 URL] 톰캣 기동 후 브라우저에서 (포트/컨텍스트는 환경에 맞게):");
-            System.out.println("  목록  " + base + "/" + mod + "/Egov" + ent + "List.do");
-            System.out.println("  등록  " + base + "/" + mod + "/Egov" + ent + "RegistView.do");
+            System.out.println("  목록  " + result.listUrl());
+            System.out.println("  등록  " + result.registUrl());
 
         } catch (IllegalArgumentException e) {
             System.err.println("[입력 오류] " + e.getMessage());
@@ -88,14 +83,6 @@ public class Main {
             e.printStackTrace();
             System.exit(9);
         }
-    }
-
-    private static DdlParser selectParser(String dbType) {
-        return switch (dbType == null ? "mysql" : dbType.toLowerCase()) {
-            case "mysql" -> new MySqlDdlParser();
-            default -> throw new IllegalArgumentException(
-                    "현재 지원하지 않는 DB 타입입니다: " + dbType + " (1차는 mysql만 지원)");
-        };
     }
 
     private static Map<String, String> parseArgs(String[] args) {
