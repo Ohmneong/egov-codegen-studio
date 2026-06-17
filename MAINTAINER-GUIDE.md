@@ -178,6 +178,14 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
   팀원은 releases 페이지에서 내려받는다.
 - **폐쇄망 SI 현장** → `.exe`(또는 app-image 폴더를 zip 압축)를 USB/사내 파일서버로 전달. 받는 PC에 Java 불필요.
 
+### 받는 쪽 SmartScreen / "알 수 없는 게시자" 경고 대응
+배포본 exe는 **코드 서명이 없어** 다른 PC에서 실행 시 Windows Defender SmartScreen이 막을 수 있다(서명 미적용 exe의 공통 현상 — 우리 코드 문제 아님). 서명 인증서 없이 받는 쪽이 우회하는 방법:
+- SmartScreen 창에서 **"추가 정보 → 실행"** 클릭
+- 받은 exe 우클릭 → 속성 → **"차단 해제"** 체크 (또는 PowerShell `Unblock-File 파일.exe`)
+- **USB로 직접 복사**하면 "인터넷에서 받음" 표식(MOTW)이 안 붙어 경고가 뜨지 않는다 — **폐쇄망 반입엔 이게 사실상 해결책**
+
+> 경고를 근본적으로 없애려면 코드 서명 인증서가 필요하다(사내: 자체서명 + 사내 신뢰 루트 등록 / 공개: OV·EV 상용 인증서 → `signtool`로 exe 서명). 현재는 미적용.
+
 ### 수정 → 재배포 사이클 (가장 자주 하는 일)
 1. `feature/<요약>` 브랜치에서 소스 수정.
 2. `build.ps1` → `sample/*.sql`로 생성해 회귀 확인(4장 체크리스트).

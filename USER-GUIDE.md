@@ -184,6 +184,7 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 | 톰캣 기동 시 `Cannot find class egovframework.com.cmm.*` | **WTP 배포 깨짐**(컴파일은 정상인데 배포 폴더 `wtpwebapps/.../WEB-INF/classes`가 빔). Servers 뷰 → 서버 **Stop → Clean… → Add and Remove로 모듈 재등록 → Start**. `mvn clean package`로는 해결 안 됨(배포 폴더는 WTP가 관리). |
 | 채번 등록 시 `IDS` 관련 오류 | `IDS` 채번 테이블 미존재. 7번 DDL로 생성. |
 | 한글 라벨이 필드명으로 나옴 | DDL 컬럼에 `COMMENT`가 없음. DDL에 코멘트 추가 후 재생성. |
+| 배포한 `.exe` 실행 시 "Windows의 PC 보호" 경고 | SmartScreen(미서명 exe). **"추가 정보 → 실행"**, 또는 파일 속성 → **"차단 해제"**. **USB로 직접 복사**하면 표식(MOTW)이 안 붙어 경고가 안 뜸. 근본 해결은 코드 서명. |
 
 ---
 
