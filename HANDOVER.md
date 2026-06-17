@@ -2,14 +2,16 @@
 
 > 이 프로젝트를 **처음 이어받는 사람**을 위한 종합 안내입니다. 이 문서 하나로 "무엇을·왜 만들었고, 어디까지 됐고, 어떻게 이어가는지"를 파악할 수 있게 썼습니다.
 > 세부는 [README](./README.md) · [QUICKSTART](./QUICKSTART.md) · [USER-GUIDE](./USER-GUIDE.md) · [MAINTAINER-GUIDE](./MAINTAINER-GUIDE.md)를 참고하세요.
+>
+> **버전 노트**: 이 저장소는 **`egov-codegen-studio`** — CLI 전용 `egov-crud-gen`(백업)에서 분기한 **GUI 확장판**입니다. CLI(`run.ps1`)와 Swing GUI(`run-gui.ps1`)를 함께 제공하며, 생성 엔진(`GenerationService`)을 공유합니다.
 
 ---
 
 ## 1. 프로젝트 한 줄 요약
 
-**eGov 표준프레임워크(검증: 5.0.1) 프로젝트에서, MySQL DDL 한 개를 넣으면 CRUD 풀세트(백엔드 6 + Mapper XML + JSP 4)를 자동 생성하는 CLI 도구.** 순수 Java, 외부 의존성 0.
+**eGov 표준프레임워크(검증: 5.0.1) 프로젝트에서, MySQL DDL 한 개를 넣으면 CRUD 풀세트(백엔드 6 + Mapper XML + JSP 4)를 자동 생성하는 CLI·GUI 도구.** 순수 Java, 외부 의존성 0.
 
-- 저장소: https://github.com/Ohmneong/egov-crud-gen (public)
+- 저장소: 로컬 `egov-codegen-studio` (egov-crud-gen 백업본에서 분기, 아직 원격 미연결)
 - 언어/런타임: Java 17+ (검증은 번들 JDK 21)
 - 빌드 도구: 없음(순수 `javac`/`jar`, `build.ps1` 래퍼)
 
@@ -28,6 +30,11 @@
 - ✅ 프로젝트 적응형 설정(`gen.properties`): 패키지/모듈/prefix/DB/공통컴포넌트 경로/baseUrl
 - ✅ 생성 후 **접속 URL 자동 출력**
 - ✅ **실제 검증 완료**: 컴파일(종료코드 0) + 실제 프로젝트(`bp.enter`) 톰캣 런타임에서 목록/상세/등록/채번까지 동작 확인
+- ✅ **Swing GUI**(`run-gui.ps1`): DDL 입력·설정 폼·출력폴더 탐색기 선택·생성. CLI와 생성 엔진(`GenerationService`) 공유
+- ✅ 감사 컬럼: eGov 표준명 + **관례명(`created_by/at`, `updated_by/at`)** 자동 인식(폼 입력 제외·시점 `SYSDATE()`)
+- ✅ 검색 조건은 **PK 기준**으로 생성(이전 문자열 컬럼 전체에서 축소)
+- ✅ 여러 줄에 걸친 컬럼 정의(`DEFAULT … ON UPDATE …`)도 파싱
+- ⚙ (변경) 생성물 클래스명/파일명/URL에서 **`Egov` 접두어 제거** (eGov 라이브러리 클래스는 유지)
 
 ## 4. 지금까지 한 작업 (경과)
 
@@ -61,15 +68,17 @@ src/com/hanbit/egovgen/
 ├─ Main.java                  CLI 진입점. 인자 파싱, 파서 선택, 실행 + 결과/URL 출력
 ├─ config/GenConfig.java      설정 로드(gen.properties) + CLI 덮어쓰기. 적응형 설정의 단일 출처
 ├─ model/
-│  ├─ ColumnMeta.java         컬럼 메타 + label()(코멘트→라벨), searchable()
-│  └─ TableMeta.java          테이블 메타 + primaryKey(), searchableColumns()
+│  ├─ ColumnMeta.java         컬럼 메타 + label(), searchable(), isAudit()/isAuditTimestamp()/isUpdateTimestamp()
+│  └─ TableMeta.java          테이블 메타 + primaryKey(), searchableColumns()(현재 PK 기준)
 ├─ parser/
 │  ├─ DdlParser.java          파서 인터페이스 (DB 교체 지점)
 │  └─ MySqlDdlParser.java     MySQL 정규식 파서
-└─ gen/
-   ├─ NameUtil.java           snake↔camel↔Pascal, 테이블명→엔티티명
-   ├─ TypeMapper.java         DDL 타입 → Java 타입, size 추출
-   └─ CodeGenerator.java      ★ 템플릿 + 파일 생성 (가장 자주 수정)
+├─ gen/
+│  ├─ NameUtil.java           snake↔camel↔Pascal, 테이블명→엔티티명
+│  ├─ TypeMapper.java         DDL 타입 → Java 타입, size 추출
+│  └─ CodeGenerator.java      ★ 템플릿 + 파일 생성 (가장 자주 수정)
+├─ service/                   GenerationService·GenerationResult (CLI/GUI 공유 생성 엔진, 콘솔 비의존)
+└─ ui/                        GenGuiApp (Swing GUI 진입점)
 ```
 
 `CodeGenerator`가 핵심: `generate()`(산출물 목록), `base()`(공통 치환변수), `render()`(치환), 산출물별 메서드(`domainVo`/`serviceImpl`/`mapperXml`/`jspList` 등). 자세한 수정법은 **MAINTAINER-GUIDE 2·3장**.
