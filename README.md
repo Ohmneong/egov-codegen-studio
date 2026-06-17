@@ -32,14 +32,24 @@ java -jar dist\egov-crud-gen.jar --ddl sample\sample.sql --config gen.properties
 | `--prefix <prefix>` | 엔티티명 도출 시 제거할 테이블 prefix |
 | `--out <디렉터리>` | 출력 루트 (기본 `./output`) |
 
+### GUI로 실행 (Swing)
+
+CLI 대신 화면에서 입력·생성할 수도 있다. 같은 생성 엔진(`GenerationService`)을 호출하므로 결과는 동일하다.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File run-gui.ps1
+```
+
+DDL을 붙여넣거나 파일로 열고, 설정 폼(시작 시 `gen.properties`로 채워짐)을 조정한 뒤 `[생성]`을 누르면 파일 목록과 접속 URL이 표시된다. (Swing은 JDK 내장 — 추가 의존성 없음)
+
 ## 산출물 (테이블 1개 → 11파일)
 
 ```
-output/src/main/java/{package}/service/        {Entity}.java, {Entity}VO.java, Egov{Entity}ManageService.java
-output/src/main/java/{package}/service/impl/    Egov{Entity}ManageServiceImpl.java, {Entity}ManageDAO.java
-output/src/main/java/{package}/web/             Egov{Entity}ManageController.java
-output/src/main/resources/egovframework/mapper/{module}/  Egov{Entity}Manage_SQL_mysql.xml
-output/src/main/webapp/WEB-INF/jsp/{module}/    Egov{Entity}{List,Detail,Regist,Modify}.jsp
+output/src/main/java/{package}/service/        {Entity}.java, {Entity}VO.java, {Entity}ManageService.java
+output/src/main/java/{package}/service/impl/    {Entity}ManageServiceImpl.java, {Entity}ManageDAO.java
+output/src/main/java/{package}/web/             {Entity}ManageController.java
+output/src/main/resources/egovframework/mapper/{module}/  {Entity}Manage_SQL_mysql.xml
+output/src/main/webapp/WEB-INF/jsp/{module}/    {Entity}{List,Detail,Regist,Modify}.jsp
 ```
 
 ## 적응형 설정 (gen.properties)
@@ -50,11 +60,13 @@ output/src/main/webapp/WEB-INF/jsp/{module}/    Egov{Entity}{List,Detail,Regist,
 
 ```
 src/com/hanbit/egovgen/
-  Main.java                 CLI 진입점
-  config/GenConfig.java     적응형 설정 로드
+  Main.java                 CLI 진입점 (얇은 어댑터)
+  config/GenConfig.java     적응형 설정 로드 + 폼 주입 setter
   model/                    TableMeta, ColumnMeta (중간 메타모델)
   parser/                   DdlParser(인터페이스), MySqlDdlParser
   gen/                      NameUtil, TypeMapper, CodeGenerator(템플릿)
+  service/                  GenerationService, GenerationResult (CLI/GUI 공유 생성 엔진)
+  ui/                       GenGuiApp (Swing GUI 진입점)
 ```
 
 ## 1차(MVP) 범위와 한계 — 정직하게

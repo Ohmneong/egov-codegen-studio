@@ -50,20 +50,43 @@ public class ColumnMeta {
     }
 
     /**
-     * eGov 표준 감사 컬럼 여부(등록자/등록시점/수정자/수정시점).
+     * 감사 컬럼 여부(등록자/등록시점/수정자/수정시점).
      * 사용자가 화면에서 입력하는 값이 아니라 시스템이 채우는 컬럼이다.
+     * eGov 표준 컬럼명과 더불어 관례적 영문 컬럼명(created_by/at, updated_by/at)도 인식한다.
      */
     public boolean isAudit() {
-        if (columnName == null) return false;
-        String c = columnName.toUpperCase();
-        return c.equals("FRST_REGISTER_ID") || c.equals("FRST_REGIST_PNTTM")
-            || c.equals("LAST_UPDUSR_ID") || c.equals("LAST_UPDT_PNTTM");
+        String c = upperColumn();
+        if (c == null) return false;
+        return switch (c) {
+            // eGov 표준 감사 컬럼
+            case "FRST_REGISTER_ID", "FRST_REGIST_PNTTM", "LAST_UPDUSR_ID", "LAST_UPDT_PNTTM",
+            // 관례적 영문 감사 컬럼명 (대소문자 무관)
+                 "CREATED_BY", "CREATED_AT", "UPDATED_BY", "UPDATED_AT" -> true;
+            default -> false;
+        };
     }
 
-    /** 감사 컬럼 중 시점(일시) 컬럼 — INSERT/UPDATE 시 SYSDATE()로 자동 입력. */
+    /**
+     * 감사 컬럼 중 시점(일시) 컬럼 — INSERT 시 SYSDATE()로 자동 입력.
+     * (등록시점·수정시점 모두 신규 등록 시에는 현재시각으로 채운다.)
+     */
     public boolean isAuditTimestamp() {
-        if (columnName == null) return false;
-        String c = columnName.toUpperCase();
-        return c.equals("FRST_REGIST_PNTTM") || c.equals("LAST_UPDT_PNTTM");
+        String c = upperColumn();
+        if (c == null) return false;
+        return switch (c) {
+            case "FRST_REGIST_PNTTM", "LAST_UPDT_PNTTM", "CREATED_AT", "UPDATED_AT" -> true;
+            default -> false;
+        };
+    }
+
+    /** 감사 시점 중 '수정시점' — UPDATE 시에도 SYSDATE()로 갱신한다(등록시점은 INSERT에서만). */
+    public boolean isUpdateTimestamp() {
+        String c = upperColumn();
+        if (c == null) return false;
+        return c.equals("LAST_UPDT_PNTTM") || c.equals("UPDATED_AT");
+    }
+
+    private String upperColumn() {
+        return columnName == null ? null : columnName.toUpperCase();
     }
 }

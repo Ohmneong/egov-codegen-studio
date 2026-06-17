@@ -109,16 +109,31 @@ $java = "C:\eGovFrameDev-5.0.1-Windows-64bit\eclipse\plugins\...\jre\bin\java.ex
 | `--out <디렉터리>` | 출력 루트 |
 | `--idgnr` | 채번 적용 (String PK일 때만 동작) |
 
+### 5-B. GUI로 실행 (Swing 화면)
+
+명령행이 익숙하지 않다면 화면으로 쓸 수 있습니다. 빌드(2번)는 동일하게 한 뒤:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run-gui.ps1
+```
+
+- 시작 시 작업 폴더의 `gen.properties` 값이 설정 폼에 자동으로 채워집니다.
+- 좌측에 DDL을 붙여넣거나 `[DDL 파일 열기…]`로 불러오고, 설정 폼(패키지·모듈·prefix·DB·출력경로·baseUrl·채번)을 조정합니다.
+- `[생성]`을 누르면 우측에 파싱 요약·생성 파일 목록·접속 URL이 표시됩니다.
+- `[설정 다시 불러오기]`는 폼을 `gen.properties` 값으로 되돌립니다.
+
+> 내부적으로 CLI와 **같은 생성 엔진**을 호출하므로 산출물은 명령행 실행과 동일합니다. 추가 설치물은 없습니다(Swing은 JDK 내장).
+
 ---
 
 ## 6. 산출물 (테이블 1개 → 11~12파일)
 
 ```
-src/main/java/{package}/service/        {Entity}.java, {Entity}VO.java, Egov{Entity}ManageService.java
-src/main/java/{package}/service/impl/    Egov{Entity}ManageServiceImpl.java, {Entity}ManageDAO.java
-src/main/java/{package}/web/             Egov{Entity}ManageController.java
-src/main/resources/egovframework/mapper/{module}/   Egov{Entity}Manage_SQL_mysql.xml
-src/main/webapp/WEB-INF/jsp/{module}/    Egov{Entity}{List,Detail,Regist,Modify}.jsp
+src/main/java/{package}/service/        {Entity}.java, {Entity}VO.java, {Entity}ManageService.java
+src/main/java/{package}/service/impl/    {Entity}ManageServiceImpl.java, {Entity}ManageDAO.java
+src/main/java/{package}/web/             {Entity}ManageController.java
+src/main/resources/egovframework/mapper/{module}/   {Entity}Manage_SQL_mysql.xml
+src/main/webapp/WEB-INF/jsp/{module}/    {Entity}{List,Detail,Regist,Modify}.jsp
 src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  (채번 시에만)
 ```
 
@@ -153,8 +168,8 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 2. 자동 빌드 확인 (Problems 뷰에 에러 없어야 함)
 3. (채번 테이블 등) **DB 준비**
 4. 톰캣 **republish 후 Start**
-5. 접속: `http://localhost:{포트}/{컨텍스트}/{module}/Egov{Entity}List.do`
-   - 예: `/let/sym/cal/EgovRestdeList.do`
+5. 접속: `http://localhost:{포트}/{컨텍스트}/{module}/{Entity}List.do`
+   - 예: `/let/sym/cal/RestdeList.do`
 
 ---
 
@@ -179,7 +194,7 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 - **DB**: MySQL만. 다른 DB는 `DdlParser` 인터페이스로 확장.
 - **엑셀 일괄 입력**: 미지원(POI 의존성 회피). 1차는 DDL 파일 단건.
 - **검색 select 라벨**: 목록 화면 검색 select 옵션이 비어 있어 필요 시 채워야 함.
-- **감사 컬럼 자동 처리**: eGov 표준 감사 컬럼(`FRST_REGISTER_ID`/`FRST_REGIST_PNTTM`/`LAST_UPDUSR_ID`/`LAST_UPDT_PNTTM`)은 등록·수정 화면에서 입력칸 제외, 시점(`_PNTTM`)은 INSERT/UPDATE 시 `SYSDATE()` 자동 입력. 단 **등록자/수정자 ID는 서버 로그인 연동 미구현**이라 채워지지 않음(필요 시 Controller에서 LoginVO로 set).
+- **감사 컬럼 자동 처리**: eGov 표준 감사 컬럼(`FRST_REGISTER_ID`/`FRST_REGIST_PNTTM`/`LAST_UPDUSR_ID`/`LAST_UPDT_PNTTM`)과 **관례적 영문 컬럼명(`created_by`/`created_at`/`updated_by`/`updated_at`, 대소문자 무관)** 을 인식한다. 등록·수정 화면에서 입력칸을 제외하고, **등록시점은 INSERT 시·수정시점은 INSERT/UPDATE 시 `SYSDATE()`** 로 자동 입력. 단 **등록자/수정자 ID는 서버 로그인 연동 미구현**이라 채워지지 않음(필요 시 Controller에서 LoginVO로 set).
 - 등록/수정 폼 입력칸 옆에 **데이터 타입·길이**(예: `VARCHAR(200)`)가 표시됨.
 
 ---
@@ -192,5 +207,5 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 # 3. 생성 + 배치
 & $java -jar dist\egov-crud-gen.jar --ddl sample\restde.sql --config gen.properties --out "C:\...\bp.enter"
 # 4. 이클립스 Refresh → republish → 접속
-#    http://localhost:8080/.../let/sym/cal/EgovRestdeList.do
+#    http://localhost:8080/.../let/sym/cal/RestdeList.do
 ```

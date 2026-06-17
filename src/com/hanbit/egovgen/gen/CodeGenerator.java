@@ -37,15 +37,15 @@ public class CodeGenerator {
         var written = new java.util.ArrayList<Path>();
         written.add(write(javaServiceDir.resolve(entity + ".java"), domainVo(t)));
         written.add(write(javaServiceDir.resolve(entity + "VO.java"), searchVo(t)));
-        written.add(write(javaServiceDir.resolve("Egov" + entity + "ManageService.java"), serviceInterface(t)));
-        written.add(write(javaImplDir.resolve("Egov" + entity + "ManageServiceImpl.java"), serviceImpl(t)));
+        written.add(write(javaServiceDir.resolve(entity +"ManageService.java"), serviceInterface(t)));
+        written.add(write(javaImplDir.resolve(entity +"ManageServiceImpl.java"), serviceImpl(t)));
         written.add(write(javaImplDir.resolve(entity + "ManageDAO.java"), dao(t)));
-        written.add(write(javaWebDir.resolve("Egov" + entity + "ManageController.java"), controller(t)));
-        written.add(write(mapperDir.resolve("Egov" + entity + "Manage_SQL_mysql.xml"), mapperXml(t)));
-        written.add(write(jspDir.resolve("Egov" + entity + "List.jsp"), jspList(t)));
-        written.add(write(jspDir.resolve("Egov" + entity + "Detail.jsp"), jspDetail(t)));
-        written.add(write(jspDir.resolve("Egov" + entity + "Regist.jsp"), jspForm(t, false)));
-        written.add(write(jspDir.resolve("Egov" + entity + "Modify.jsp"), jspForm(t, true)));
+        written.add(write(javaWebDir.resolve(entity +"ManageController.java"), controller(t)));
+        written.add(write(mapperDir.resolve(entity +"Manage_SQL_mysql.xml"), mapperXml(t)));
+        written.add(write(jspDir.resolve(entity +"List.jsp"), jspList(t)));
+        written.add(write(jspDir.resolve(entity +"Detail.jsp"), jspDetail(t)));
+        written.add(write(jspDir.resolve(entity +"Regist.jsp"), jspForm(t, false)));
+        written.add(write(jspDir.resolve(entity +"Modify.jsp"), jspForm(t, true)));
 
         // 채번 옵션: 자동 로드되는 spring/com/context-idgen-{entity}.xml 생성
         if (idgnrApplicable(t)) {
@@ -223,7 +223,7 @@ public class CodeGenerator {
                 /**
                  * __ENTITY__ 관리 서비스.
                  */
-                public interface Egov__ENTITY__ManageService {
+                public interface __ENTITY__ManageService {
 
                     /** 목록 조회 */
                     List<?> select__ENTITY__List(__ENTITY__VO searchVO) throws Exception;
@@ -270,7 +270,7 @@ public class CodeGenerator {
 
                 import jakarta.annotation.Resource;
                 __IDGNR_IMPORT__
-                import __PACKAGE__.service.Egov__ENTITY__ManageService;
+                import __PACKAGE__.service.__ENTITY__ManageService;
                 import __PACKAGE__.service.__ENTITY__;
                 import __PACKAGE__.service.__ENTITY__VO;
 
@@ -278,8 +278,8 @@ public class CodeGenerator {
                  * __ENTITY__ 관리 서비스 구현. (DAO 위임 — 비즈니스 로직은 여기 추가)
                  */
                 @Service("__SERVICE_NAME__")
-                public class Egov__ENTITY__ManageServiceImpl extends __SERVICE_BASE_SIMPLE__
-                        implements Egov__ENTITY__ManageService {
+                public class __ENTITY__ManageServiceImpl extends __SERVICE_BASE_SIMPLE__
+                        implements __ENTITY__ManageService {
 
                     @Resource(name = "__DAO_NAME__")
                     private __DAO_NAME__ __ENTITY_LOWER__ManageDAO;
@@ -406,7 +406,7 @@ public class CodeGenerator {
 
                 import jakarta.annotation.Resource;
 
-                import __PACKAGE__.service.Egov__ENTITY__ManageService;
+                import __PACKAGE__.service.__ENTITY__ManageService;
                 import __PACKAGE__.service.__ENTITY__;
                 import __PACKAGE__.service.__ENTITY__VO;
 
@@ -416,13 +416,13 @@ public class CodeGenerator {
                  * __ENTITY__ 관리 컨트롤러.
                  */
                 @Controller
-                public class Egov__ENTITY__ManageController {
+                public class __ENTITY__ManageController {
 
                     @Resource(name = "__SERVICE_NAME__")
-                    private Egov__ENTITY__ManageService __ENTITY_LOWER__ManageService;
+                    private __ENTITY__ManageService __ENTITY_LOWER__ManageService;
 
                     /** 목록 */
-                    @RequestMapping(value = "/__MODULE__/Egov__ENTITY__List.do")
+                    @RequestMapping(value = "/__MODULE__/__ENTITY__List.do")
                     public String select__ENTITY__List(@ModelAttribute("searchVO") __ENTITY__VO searchVO,
                             ModelMap model) throws Exception {
 
@@ -439,49 +439,49 @@ public class CodeGenerator {
                         int totCnt = __ENTITY_LOWER__ManageService.select__ENTITY__ListTotCnt(searchVO);
                         paginationInfo.setTotalRecordCount(totCnt);
                         model.addAttribute("paginationInfo", paginationInfo);
-                        return "/__MODULE__/Egov__ENTITY__List";
+                        return "/__MODULE__/__ENTITY__List";
                     }
 
                     /** 상세 */
-                    @RequestMapping(value = "/__MODULE__/Egov__ENTITY__Detail.do")
+                    @RequestMapping(value = "/__MODULE__/__ENTITY__Detail.do")
                     public String select__ENTITY__Detail(__ENTITY__ vo, ModelMap model) throws Exception {
                         model.addAttribute("result", __ENTITY_LOWER__ManageService.select__ENTITY__Detail(vo));
-                        return "/__MODULE__/Egov__ENTITY__Detail";
+                        return "/__MODULE__/__ENTITY__Detail";
                     }
 
                     /** 등록 폼 */
-                    @RequestMapping(value = "/__MODULE__/Egov__ENTITY__RegistView.do")
+                    @RequestMapping(value = "/__MODULE__/__ENTITY__RegistView.do")
                     public String register__ENTITY__View(@ModelAttribute("searchVO") __ENTITY__VO searchVO,
                             ModelMap model) throws Exception {
                         model.addAttribute("__ENTITY_LOWER__", new __ENTITY__());
-                        return "/__MODULE__/Egov__ENTITY__Regist";
+                        return "/__MODULE__/__ENTITY__Regist";
                     }
 
                     /** 등록 처리 */
-                    @RequestMapping(value = "/__MODULE__/Egov__ENTITY__Regist.do")
+                    @RequestMapping(value = "/__MODULE__/__ENTITY__Regist.do")
                     public String register__ENTITY__(@ModelAttribute("__ENTITY_LOWER__") __ENTITY__ vo) throws Exception {
                         __ENTITY_LOWER__ManageService.insert__ENTITY__(vo);
-                        return "redirect:/__MODULE__/Egov__ENTITY__List.do";
+                        return "redirect:/__MODULE__/__ENTITY__List.do";
                     }
 
                     /** 수정 폼/처리 (cmd 파라미터로 구분) */
-                    @RequestMapping(value = "/__MODULE__/Egov__ENTITY__Modify.do")
+                    @RequestMapping(value = "/__MODULE__/__ENTITY__Modify.do")
                     public String modify__ENTITY__(@ModelAttribute("__ENTITY_LOWER__") __ENTITY__ vo,
                             @RequestParam Map<String, Object> commandMap, ModelMap model) throws Exception {
                         String cmd = commandMap.get("cmd") == null ? "" : (String) commandMap.get("cmd");
                         if ("Modify".equals(cmd)) {
                             __ENTITY_LOWER__ManageService.update__ENTITY__(vo);
-                            return "redirect:/__MODULE__/Egov__ENTITY__List.do";
+                            return "redirect:/__MODULE__/__ENTITY__List.do";
                         }
                         model.addAttribute("__ENTITY_LOWER__", __ENTITY_LOWER__ManageService.select__ENTITY__Detail(vo));
-                        return "/__MODULE__/Egov__ENTITY__Modify";
+                        return "/__MODULE__/__ENTITY__Modify";
                     }
 
                     /** 삭제 */
-                    @RequestMapping(value = "/__MODULE__/Egov__ENTITY__Remove.do")
+                    @RequestMapping(value = "/__MODULE__/__ENTITY__Remove.do")
                     public String delete__ENTITY__(__ENTITY__ vo) throws Exception {
                         __ENTITY_LOWER__ManageService.delete__ENTITY__(vo);
-                        return "redirect:/__MODULE__/Egov__ENTITY__List.do";
+                        return "redirect:/__MODULE__/__ENTITY__List.do";
                     }
                 }
                 """, base(t));
@@ -521,8 +521,8 @@ public class CodeGenerator {
         for (ColumnMeta c : cols) {
             if (c.isPrimaryKey()) continue;
             if (c.isAudit()) {
-                if (c.getColumnName().equalsIgnoreCase("LAST_UPDT_PNTTM")) {
-                    updSet.append("            LAST_UPDT_PNTTM = SYSDATE(),\n");
+                if (c.isUpdateTimestamp()) {
+                    updSet.append("            ").append(c.getColumnName()).append(" = SYSDATE(),\n");
                 }
                 continue; // 그 외 감사 컬럼은 수정에서 제외
             }
@@ -609,7 +609,7 @@ public class CodeGenerator {
         for (ColumnMeta c : t.getColumns()) {
             ths.append("                <th>").append(c.label()).append("</th>\n");
             if (pk != null && c.isPrimaryKey()) {
-                tds.append("                <td><a href=\"<c:url value='/__MODULE__/Egov__ENTITY__Detail.do'/>?")
+                tds.append("                <td><a href=\"<c:url value='/__MODULE__/__ENTITY__Detail.do'/>?")
                    .append(c.getFieldName()).append("=<c:out value='${result.").append(c.getFieldName())
                    .append("}'/>\"><c:out value=\"${result.").append(c.getFieldName()).append("}\"/></a></td>\n");
             } else {
@@ -628,14 +628,14 @@ public class CodeGenerator {
                 <%@ taglib prefix="ui" uri="http://egovframework.gov/ctl/ui" %>
                 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
                 <!-- __ENTITY__ 목록 화면 (자동 생성) -->
-                <form name="frm" action="<c:url value='/__MODULE__/Egov__ENTITY__List.do'/>" method="post">
+                <form name="frm" action="<c:url value='/__MODULE__/__ENTITY__List.do'/>" method="post">
                     <input type="hidden" name="pageIndex" value="<c:out value='${searchVO.pageIndex}'/>"/>
                     <select name="searchCondition">
                         <option value="0">검색조건</option>
                     </select>
                     <input type="text" name="searchKeyword" value="<c:out value='${searchVO.searchKeyword}'/>"/>
                     <button type="submit">조회</button>
-                    <a href="<c:url value='/__MODULE__/Egov__ENTITY__RegistView.do'/>">등록</a>
+                    <a href="<c:url value='/__MODULE__/__ENTITY__RegistView.do'/>">등록</a>
                 </form>
 
                 <table>
@@ -685,9 +685,9 @@ public class CodeGenerator {
                 <table>
                 __ROWS__</table>
 
-                <a href="<c:url value='/__MODULE__/Egov__ENTITY__Modify.do'/>?__PK_FIELD__=<c:out value='__PK_VALUE__'/>">수정</a>
-                <a href="<c:url value='/__MODULE__/Egov__ENTITY__Remove.do'/>?__PK_FIELD__=<c:out value='__PK_VALUE__'/>">삭제</a>
-                <a href="<c:url value='/__MODULE__/Egov__ENTITY__List.do'/>">목록</a>
+                <a href="<c:url value='/__MODULE__/__ENTITY__Modify.do'/>?__PK_FIELD__=<c:out value='__PK_VALUE__'/>">수정</a>
+                <a href="<c:url value='/__MODULE__/__ENTITY__Remove.do'/>?__PK_FIELD__=<c:out value='__PK_VALUE__'/>">삭제</a>
+                <a href="<c:url value='/__MODULE__/__ENTITY__List.do'/>">목록</a>
                 """, v);
     }
 
@@ -719,7 +719,7 @@ public class CodeGenerator {
         }
         var v = base(t);
         v.put("ROWS", rows.toString());
-        v.put("ACTION", modify ? "Egov__ENTITY__Modify.do?cmd=Modify" : "Egov__ENTITY__Regist.do");
+        v.put("ACTION", modify ? "__ENTITY__Modify.do?cmd=Modify" : "__ENTITY__Regist.do");
         v.put("TITLE", modify ? "수정" : "등록");
         // ACTION 안의 __ENTITY__ 도 치환되도록 한 번 더 render
         return render(render("""
@@ -730,7 +730,7 @@ public class CodeGenerator {
                     <table>
                 __ROWS__    </table>
                     <button type="submit">__TITLE__</button>
-                    <a href="<c:url value='/__MODULE__/Egov__ENTITY__List.do'/>">목록</a>
+                    <a href="<c:url value='/__MODULE__/__ENTITY__List.do'/>">목록</a>
                 </form>
                 """, v), v);
     }
