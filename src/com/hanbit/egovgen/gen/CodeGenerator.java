@@ -521,8 +521,8 @@ public class CodeGenerator {
         for (ColumnMeta c : cols) {
             if (c.isPrimaryKey()) continue;
             if (c.isAudit()) {
-                if (c.getColumnName().equalsIgnoreCase("LAST_UPDT_PNTTM")) {
-                    updSet.append("            LAST_UPDT_PNTTM = SYSDATE(),\n");
+                if (c.isUpdateTimestamp()) {
+                    updSet.append("            ").append(c.getColumnName()).append(" = SYSDATE(),\n");
                 }
                 continue; // 그 외 감사 컬럼은 수정에서 제외
             }

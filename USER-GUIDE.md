@@ -194,7 +194,7 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 - **DB**: MySQL만. 다른 DB는 `DdlParser` 인터페이스로 확장.
 - **엑셀 일괄 입력**: 미지원(POI 의존성 회피). 1차는 DDL 파일 단건.
 - **검색 select 라벨**: 목록 화면 검색 select 옵션이 비어 있어 필요 시 채워야 함.
-- **감사 컬럼 자동 처리**: eGov 표준 감사 컬럼(`FRST_REGISTER_ID`/`FRST_REGIST_PNTTM`/`LAST_UPDUSR_ID`/`LAST_UPDT_PNTTM`)은 등록·수정 화면에서 입력칸 제외, 시점(`_PNTTM`)은 INSERT/UPDATE 시 `SYSDATE()` 자동 입력. 단 **등록자/수정자 ID는 서버 로그인 연동 미구현**이라 채워지지 않음(필요 시 Controller에서 LoginVO로 set).
+- **감사 컬럼 자동 처리**: eGov 표준 감사 컬럼(`FRST_REGISTER_ID`/`FRST_REGIST_PNTTM`/`LAST_UPDUSR_ID`/`LAST_UPDT_PNTTM`)과 **관례적 영문 컬럼명(`created_by`/`created_at`/`updated_by`/`updated_at`, 대소문자 무관)** 을 인식한다. 등록·수정 화면에서 입력칸을 제외하고, **등록시점은 INSERT 시·수정시점은 INSERT/UPDATE 시 `SYSDATE()`** 로 자동 입력. 단 **등록자/수정자 ID는 서버 로그인 연동 미구현**이라 채워지지 않음(필요 시 Controller에서 LoginVO로 set).
 - 등록/수정 폼 입력칸 옆에 **데이터 타입·길이**(예: `VARCHAR(200)`)가 표시됨.
 
 ---
