@@ -126,14 +126,14 @@ src/dev/myoh/egovgen/
 
 ### 빌드
 ```powershell
-powershell -ExecutionPolicy Bypass -File build.ps1   # dist\egov-crud-gen.jar
+powershell -ExecutionPolicy Bypass -File build.ps1   # dist\egov-codegen-studio.jar
 ```
 
 ### 생성 자바의 컴파일 검증 (회귀 테스트의 핵심)
 생성 코드는 eGov 의존성이 필요하므로, 로컬 `.m2` 또는 대상 프로젝트의 의존성으로 컴파일해본다.
 ```powershell
 # 1) 충돌 없는 패키지로 생성
-java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
+java -jar dist\egov-codegen-studio.jar --ddl sample\verify.sql `
      --package egovframework.let.gen.sample --module let/gen/sample --prefix LETTN_ --idgnr --out .\verify-output
 
 # 2) .m2 의존성으로 classpath 구성 (소스/자바독 jar 제외, 백슬래시→슬래시)
@@ -181,7 +181,7 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
 7. **인코딩** — 소스/생성물 UTF-8. PowerShell `Set-Content -Encoding utf8`은 BOM을 붙이므로 argfile엔 `[IO.File]::WriteAllLines` 사용.
 8. **CRLF 경고**는 무해(Windows). 필요하면 `.gitattributes`로 정책화.
 9. **여러 줄 컬럼 정의** — `DEFAULT ... ON UPDATE ...`처럼 한 컬럼이 여러 줄에 걸치면, `MySqlDdlParser`가 `splitTopLevel` 조각의 공백(줄바꿈)을 한 칸으로 정규화해 파싱한다. 컬럼 정규식의 `.`은 줄바꿈을 안 먹으므로 이 정규화를 빼면 컬럼이 누락된다.
-10. **GUI가 jar를 잠금** — `run-gui.ps1`로 띄운 GUI(`javaw`)가 `dist\egov-crud-gen.jar`를 물고 있으면 `build.ps1`/`package.ps1`이 jar 교체에 실패한다. 빌드·패키징 전 GUI 프로세스를 종료할 것.
+10. **GUI가 jar를 잠금** — `run-gui.ps1`로 띄운 GUI(`javaw`)가 `dist\egov-codegen-studio.jar`를 물고 있으면 `build.ps1`/`package.ps1`이 jar 교체에 실패한다. 빌드·패키징 전 GUI 프로세스를 종료할 것.
 
 ---
 
@@ -266,7 +266,7 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
 # 2. 빌드
 powershell -ExecutionPolicy Bypass -File build.ps1
 # 3. 생성 + 눈으로 확인
-java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql --config gen.properties --idgnr
+java -jar dist\egov-codegen-studio.jar --ddl sample\verify.sql --config gen.properties --idgnr
 # 4. (필요시) 컴파일 검증 → 톰캣 1회 구동
 # 5. 문서 동기화 후 feature 브랜치 커밋
 ```

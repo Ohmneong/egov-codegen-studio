@@ -15,7 +15,7 @@ cd C:\Users\ADMIN\Desktop\pjt\egov-codegen-studio
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-`빌드 완료: ...dist\egov-crud-gen.jar` 가 보이면 성공입니다. (이 단계는 처음 한 번만 하면 됩니다.)
+`빌드 완료: ...dist\egov-codegen-studio.jar` 가 보이면 성공입니다. (이 단계는 처음 한 번만 하면 됩니다.)
 
 > **💡 명령어가 부담스러우면 GUI(화면)로 하세요.** 빌드 후 `.\run-gui.ps1` 을 실행하면 창이 떠서 DDL 붙여넣기·설정·생성을 마우스로 할 수 있습니다(STEP 2~5를 화면으로 대체). 자세히는 맨 아래 **[STEP 7] GUI로 하기** 참고.
 
@@ -164,7 +164,7 @@ powershell -ExecutionPolicy Bypass -File .\package.ps1 -Type exe
 | 이럴 때 | 이렇게 |
 |---|---|
 | `-ExecutionPolicy ... 인식되지 않습니다` | 앞에 `powershell` 빼먹은 것. `powershell -ExecutionPolicy Bypass -File .\build.ps1` 통째로 입력 |
-| `dist\egov-crud-gen.jar 가 없습니다` | STEP 1 빌드를 안 한 것. 빌드 먼저 |
+| `dist\egov-codegen-studio.jar 가 없습니다` | STEP 1 빌드를 안 한 것. 빌드 먼저 |
 | `Data too long for column` | 입력값이 컬럼 길이보다 김. 특히 `사용여부`엔 `Y` 한 글자만 |
 | 화면은 뜨는데 저장이 안 됨 | DB에 그 테이블을 진짜로 만들었는지 확인 (DDL을 DB에서도 실행) |
 | 채번 등록 오류 | DB에 `IDS` 테이블이 있어야 함 ([USER-GUIDE](./USER-GUIDE.md) 7장) |

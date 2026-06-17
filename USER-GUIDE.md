@@ -29,7 +29,7 @@ eGov 표준프레임워크(검증: 5.0.1) 프로젝트에서 **MySQL DDL 한 개
 ```powershell
 cd egov-codegen-studio
 powershell -ExecutionPolicy Bypass -File .\build.ps1
-# → dist\egov-crud-gen.jar 생성
+# → dist\egov-codegen-studio.jar 생성
 ```
 
 > **주의**: 위 명령은 `powershell`까지 통째로 입력해야 합니다. 이미 PowerShell 창 안이라면 `.\build.ps1` 만으로도 됩니다. `powershell`을 빼고 `-ExecutionPolicy ...`만 입력하면 `'-ExecutionPolicy' 용어가 인식되지 않습니다` 에러가 납니다. (실행 정책 때문에 `.\build.ps1`이 막히면 `powershell -ExecutionPolicy Bypass -File .\build.ps1`을 쓰세요.)
@@ -96,10 +96,10 @@ CREATE TABLE `LETTNRESTDE` (
 $java = "C:\eGovFrameDev-5.0.1-Windows-64bit\eclipse\plugins\...\jre\bin\java.exe"
 
 # (1) 출력 디렉터리에 생성 — 결과를 먼저 확인하고 싶을 때
-& $java -jar dist\egov-crud-gen.jar --ddl sample\restde.sql --config gen.properties
+& $java -jar dist\egov-codegen-studio.jar --ddl sample\restde.sql --config gen.properties
 
 # (2) 대상 프로젝트에 바로 배치 — out 을 프로젝트 루트로
-& $java -jar dist\egov-crud-gen.jar --ddl sample\restde.sql --config gen.properties `
+& $java -jar dist\egov-codegen-studio.jar --ddl sample\restde.sql --config gen.properties `
         --out "C:\...\workspace-egov\bp.enter"
 ```
 
@@ -234,7 +234,7 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 # 1. DDL 저장: sample\restde.sql  (위 4번 예시)
 # 2. gen.properties: basePackage=egovframework.let.sym.cal, module=let/sym/cal, tablePrefix=LETTN
 # 3. 생성 + 배치
-& $java -jar dist\egov-crud-gen.jar --ddl sample\restde.sql --config gen.properties --out "C:\...\bp.enter"
+& $java -jar dist\egov-codegen-studio.jar --ddl sample\restde.sql --config gen.properties --out "C:\...\bp.enter"
 # 4. 이클립스 Refresh → republish → 접속
 #    http://localhost:8080/.../let/sym/cal/RestdeList.do
 ```

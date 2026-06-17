@@ -17,7 +17,7 @@ $root = $PSScriptRoot
 $srcDir = Join-Path $root "src"
 $buildDir = Join-Path $root "build\classes"
 $distDir = Join-Path $root "dist"
-$jarPath = Join-Path $distDir "egov-crud-gen.jar"
+$jarPath = Join-Path $distDir "egov-codegen-studio.jar"
 
 # 클린 & 디렉터리 준비
 if (Test-Path (Join-Path $root "build")) { Remove-Item (Join-Path $root "build") -Recurse -Force }

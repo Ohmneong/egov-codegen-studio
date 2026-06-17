@@ -7,7 +7,7 @@ eGov 표준프레임워크(검증 5.0.1) CRUD 코드 제너레이터. MySQL DDL 
 
 ## 빌드 / 실행 / 검증
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\build.ps1          # 빌드 → dist\egov-crud-gen.jar
+powershell -ExecutionPolicy Bypass -File .\build.ps1          # 빌드 → dist\egov-codegen-studio.jar
 .\run.ps1 --ddl sample\sample.sql --config gen.properties      # CLI 실행(기본)
 .\run.ps1 --ddl sample\verify.sql --config gen.properties --idgnr   # CLI 채번
 .\run-gui.ps1                                                  # Swing GUI 실행

@@ -49,9 +49,9 @@ $jpArgs = @(
     "--type", $Type,
     "--name", "egov-codegen-studio",
     "--app-version", "1.0.0",
-    "--vendor", "Hanbit",
+    "--vendor", "myoh",
     "--input", (Join-Path $root "dist"),
-    "--main-jar", "egov-crud-gen.jar",
+    "--main-jar", "egov-codegen-studio.jar",
     "--main-class", "dev.myoh.egovgen.ui.GenGuiApp",
     "--dest", $dest,
     "--java-options", "-Dfile.encoding=UTF-8"

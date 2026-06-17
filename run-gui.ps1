@@ -23,9 +23,9 @@ if (-not $javaw) {
     exit 1
 }
 
-$jar = Join-Path $PSScriptRoot "dist\egov-crud-gen.jar"
+$jar = Join-Path $PSScriptRoot "dist\egov-codegen-studio.jar"
 if (-not (Test-Path $jar)) {
-    Write-Host "[오류] dist\egov-crud-gen.jar 가 없습니다. 먼저 빌드하세요:" -ForegroundColor Red
+    Write-Host "[오류] dist\egov-codegen-studio.jar 가 없습니다. 먼저 빌드하세요:" -ForegroundColor Red
     Write-Host "       powershell -ExecutionPolicy Bypass -File .\build.ps1" -ForegroundColor Yellow
     exit 1
 }
