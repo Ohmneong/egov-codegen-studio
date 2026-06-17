@@ -62,7 +62,9 @@ public class MySqlDdlParser implements DdlParser {
 
         // 컬럼 정의를 최상위 콤마 기준으로 분리
         for (String raw : splitTopLevel(body)) {
-            String line = raw.trim();
+            // 컬럼 정의가 여러 줄에 걸칠 수 있어(예: DEFAULT ... ON UPDATE ...) 공백(줄바꿈 포함)을
+            // 한 칸으로 정규화한다. 안 하면 컬럼 정규식의 '.'(줄바꿈 비매칭)이 라인을 놓쳐 컬럼이 누락됨.
+            String line = raw.trim().replaceAll("\\s+", " ");
             if (line.isEmpty()) continue;
             String upper = line.toUpperCase();
             // 제약 라인은 건너뜀 (PRIMARY/FOREIGN/UNIQUE/KEY/INDEX/CONSTRAINT)
