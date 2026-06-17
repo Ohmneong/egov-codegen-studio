@@ -129,11 +129,11 @@ powershell -ExecutionPolicy Bypass -File .\run-gui.ps1
 ## 6. 산출물 (테이블 1개 → 11~12파일)
 
 ```
-src/main/java/{package}/service/        {Entity}.java, {Entity}VO.java, Egov{Entity}ManageService.java
-src/main/java/{package}/service/impl/    Egov{Entity}ManageServiceImpl.java, {Entity}ManageDAO.java
-src/main/java/{package}/web/             Egov{Entity}ManageController.java
-src/main/resources/egovframework/mapper/{module}/   Egov{Entity}Manage_SQL_mysql.xml
-src/main/webapp/WEB-INF/jsp/{module}/    Egov{Entity}{List,Detail,Regist,Modify}.jsp
+src/main/java/{package}/service/        {Entity}.java, {Entity}VO.java, {Entity}ManageService.java
+src/main/java/{package}/service/impl/    {Entity}ManageServiceImpl.java, {Entity}ManageDAO.java
+src/main/java/{package}/web/             {Entity}ManageController.java
+src/main/resources/egovframework/mapper/{module}/   {Entity}Manage_SQL_mysql.xml
+src/main/webapp/WEB-INF/jsp/{module}/    {Entity}{List,Detail,Regist,Modify}.jsp
 src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  (채번 시에만)
 ```
 
@@ -168,8 +168,8 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 2. 자동 빌드 확인 (Problems 뷰에 에러 없어야 함)
 3. (채번 테이블 등) **DB 준비**
 4. 톰캣 **republish 후 Start**
-5. 접속: `http://localhost:{포트}/{컨텍스트}/{module}/Egov{Entity}List.do`
-   - 예: `/let/sym/cal/EgovRestdeList.do`
+5. 접속: `http://localhost:{포트}/{컨텍스트}/{module}/{Entity}List.do`
+   - 예: `/let/sym/cal/RestdeList.do`
 
 ---
 
@@ -207,5 +207,5 @@ src/main/resources/egovframework/spring/com/        context-idgen-{entity}.xml  
 # 3. 생성 + 배치
 & $java -jar dist\egov-crud-gen.jar --ddl sample\restde.sql --config gen.properties --out "C:\...\bp.enter"
 # 4. 이클립스 Refresh → republish → 접속
-#    http://localhost:8080/.../let/sym/cal/EgovRestdeList.do
+#    http://localhost:8080/.../let/sym/cal/RestdeList.do
 ```

@@ -78,8 +78,8 @@ PowerShell에서 (STEP 1의 그 창, 도구 폴더 안):
 그리고 **맨 끝에 접속 URL이 바로 출력**됩니다 — 톰캣 띄운 뒤 이 주소로 들어가면 화면이 떠요:
 ```
 [접속 URL] 톰캣 기동 후 브라우저에서:
-  목록  http://localhost:8080/let/cop/notice/EgovNoticeList.do
-  등록  http://localhost:8080/let/cop/notice/EgovNoticeRegistView.do
+  목록  http://localhost:8080/let/cop/notice/NoticeList.do
+  등록  http://localhost:8080/let/cop/notice/NoticeRegistView.do
 ```
 > 주소 앞부분(포트/컨텍스트)은 `gen.properties`의 `baseUrl` 값으로 맞춰집니다. 내 톰캣에 맞게 바꿔두면 매번 정확한 주소가 나와요.
 
@@ -113,7 +113,7 @@ egov-crud-gen\output\src\main\webapp\...     ← 화면(JSP)
 ```
 
 그 다음 **이클립스에서 프로젝트 새로고침(F5) → 톰캣 재시작** 하면 화면이 뜹니다.
-접속 주소: `http://localhost:포트/.../let/cop/notice/EgovNoticeList.do`
+접속 주소: `http://localhost:포트/.../let/cop/notice/NoticeList.do`
 
 ---
 

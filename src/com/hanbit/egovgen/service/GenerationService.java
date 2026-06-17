@@ -35,7 +35,7 @@ public class GenerationService {
         List<Path> files = gen.generate(table);
 
         Path outputDir = Path.of(cfg.outputDir()).toAbsolutePath();
-        String urlBase = cfg.baseUrl() + "/" + cfg.module() + "/Egov" + table.getEntityName();
+        String urlBase = cfg.baseUrl() + "/" + cfg.module() + "/" + table.getEntityName();
         return new GenerationResult(
                 table, files, outputDir,
                 urlBase + "List.do",

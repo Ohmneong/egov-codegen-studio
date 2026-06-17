@@ -78,7 +78,17 @@ public class GenGuiApp {
         addRow(p, g, r++, "모듈(module, let/ 권장)", moduleField);
         addRow(p, g, r++, "테이블 prefix(tablePrefix)", prefixField);
         addRow(p, g, r++, "DB 타입(dbType)", dbTypeField);
-        addRow(p, g, r++, "출력 루트(outputDir)", outDirField);
+
+        // 출력 루트 + [찾아보기] — 탐색기로 폴더를 직접 고른다.
+        // eGov 프로젝트 루트를 고르면 src/main/... 구조에 바로 병합된다.
+        JPanel outPanel = new JPanel(new BorderLayout(4, 0));
+        outDirField.setToolTipText("eGov 프로젝트 루트 폴더를 고르면 src/main/... 구조에 바로 병합됩니다. 결과만 보려면 ./output");
+        outPanel.add(outDirField, BorderLayout.CENTER);
+        JButton browseOut = new JButton("찾아보기…");
+        browseOut.addActionListener(e -> chooseOutputDir());
+        outPanel.add(browseOut, BorderLayout.EAST);
+        addRow(p, g, r++, "출력 루트(outputDir)", outPanel);
+
         addRow(p, g, r++, "접속 URL 베이스(baseUrl)", baseUrlField);
 
         g.gridx = 1; g.gridy = r; g.weightx = 1;
@@ -135,6 +145,22 @@ public class GenGuiApp {
             } catch (IOException ex) {
                 error("DDL 파일을 읽지 못했습니다:\n" + ex.getMessage());
             }
+        }
+    }
+
+    /** 출력 폴더를 탐색기 창에서 고른다(폴더만 선택). */
+    private void chooseOutputDir() {
+        JFileChooser fc = new JFileChooser();
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fc.setDialogTitle("출력 폴더 선택 — eGov 프로젝트 루트를 고르면 바로 병합됩니다");
+        // 현재 입력된 경로가 실재하면 거기서 탐색을 시작한다.
+        String cur = outDirField.getText().trim();
+        if (!cur.isEmpty()) {
+            java.io.File f = new java.io.File(cur);
+            if (f.isDirectory()) fc.setCurrentDirectory(f);
+        }
+        if (fc.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+            outDirField.setText(fc.getSelectedFile().getAbsolutePath());
         }
     }
 
