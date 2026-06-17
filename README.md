@@ -42,6 +42,17 @@ powershell -ExecutionPolicy Bypass -File run-gui.ps1
 
 DDL을 붙여넣거나 파일로 열고, 설정 폼(시작 시 `gen.properties`로 채워짐)을 조정한 뒤 `[생성]`을 누르면 파일 목록과 접속 URL이 표시된다. (Swing은 JDK 내장 — 추가 의존성 없음)
 
+### 설치본(배포본) 만들기 — JRE 내장 실행 폴더
+
+`jpackage`로 **Java 설치 없이 더블클릭 실행되는** 자체포함 폴더를 만든다. (JDK 14+ 필요. `.msi/.exe` 인스톨러는 WiX가 있어야 하므로, 여기선 WiX 없이 되는 app-image 방식.)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File package.ps1
+# → package\egov-codegen-studio\egov-codegen-studio.exe  (내장 JRE 포함, 약 150MB)
+```
+
+생성된 `egov-codegen-studio` 폴더를 통째로 복사하면 어디서든(폐쇄망 PC 포함) Java 설치 없이 실행된다.
+
 ## 산출물 (테이블 1개 → 11파일)
 
 ```

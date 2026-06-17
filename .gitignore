@@ -3,6 +3,7 @@ build/
 dist/
 output/
 verify-output/
+package/
 *.class
 *.jar
 
