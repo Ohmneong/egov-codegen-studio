@@ -1,4 +1,4 @@
-# egov-crud-gen 관리자(유지보수) 매뉴얼
+# egov-codegen-studio 관리자(유지보수) 매뉴얼
 
 이 문서는 **도구를 수정·확장·배포·관리**하는 담당자를 위한 것입니다. 단순 사용법은 [`USER-GUIDE.md`](./USER-GUIDE.md)를 보세요.
 
@@ -152,25 +152,52 @@ java -jar dist\egov-crud-gen.jar --ddl sample\verify.sql `
 
 ---
 
-## 7. 버전 관리 / 릴리스
+## 7. 버전 관리 / 배포 / 재배포
 
 ### 브랜치 전략
-- `master` — 안정 버전. 직접 커밋 금지(가능하면).
-- `feature/<요약>` — 기능/수정 단위 브랜치. 회귀 체크리스트 통과 후 `master`에 병합.
+- `main` — 안정 버전. 직접 커밋 지양.
+- `feature/<요약>` — 기능/수정 단위 브랜치. 회귀 체크리스트(4장) 통과 후 `main`에 병합.
+- 원격: https://github.com/Ohmneong/egov-codegen-studio (public)
 
-### 릴리스 절차
-1. 회귀 체크리스트(4장) 통과 확인.
-2. `USER-GUIDE.md`/`MAINTAINER-GUIDE.md`/`gen.properties` 문서 동기화.
-3. 커밋 → 태그: `git tag -a v1.1 -m "채번 옵션 추가"` → (원격이 있으면) `git push --tags`.
-4. 배포물 빌드: `build.ps1` → `dist/egov-crud-gen.jar`.
-5. **폐쇄망 반입**: `dist/egov-crud-gen.jar` 1개 파일만 옮기면 됨(의존성 0). 또는 소스째 옮겨 현장에서 빌드.
+### 배포본 3종 (용도에 맞게 선택)
 
-> `dist/`·`build/`는 `.gitignore` 대상이다. 배포물(jar)은 git에 넣지 말고 빌드로 재생산하거나 사내 아티팩트 저장소에 보관.
+| 배포본 | 만드는 법 | 크기 | 받는 쪽 요건 | 용도 |
+|---|---|---|---|---|
+| **jar** | `build.ps1` | 수십 KB | Java 17+ 설치 필요 | CLI/스크립트 자동화, 소스째 반입 |
+| **app-image** | `package.ps1` | ~150MB | 없음(JRE 내장) | 폴더 복사 실행, 폐쇄망 USB |
+| **.exe 인스톨러** | `package.ps1 -Type exe` | ~55MB | 없음(JRE 내장) | 일반 배포(설치 마법사·시작메뉴/바탕화면 바로가기·제거) |
+
+> `.exe`/`.msi` 인스톨러는 **WiX 3.x** 필요(`choco install wixtoolset` 최초 1회). app-image·jar은 WiX 불필요.
+> jpackage 자체는 **풀 JDK(14+)** 에 들어 있다(번들 justj 는 JRE라 없음 — `package.ps1`이 시스템 JDK를 탐색).
+
+### 배포 채널
+- **인터넷 되는 팀 → GitHub Releases**:
+  ```powershell
+  gh release create v1.0.1 package\egov-codegen-studio-1.0.1.exe --title "v1.0.1" --notes "변경 요약"
+  ```
+  팀원은 releases 페이지에서 내려받는다.
+- **폐쇄망 SI 현장** → `.exe`(또는 app-image 폴더를 zip 압축)를 USB/사내 파일서버로 전달. 받는 PC에 Java 불필요.
+
+### 수정 → 재배포 사이클 (가장 자주 하는 일)
+1. `feature/<요약>` 브랜치에서 소스 수정.
+2. `build.ps1` → `sample/*.sql`로 생성해 회귀 확인(4장 체크리스트).
+3. **버전 올리기** — `package.ps1`의 `--app-version "1.0.0"` 값을 올린다(예: `1.0.1`).
+   > ⚠ 안 올리면 인스톨러가 같은 버전으로 인식해 업그레이드/재설치가 깔끔히 안 된다.
+4. `package.ps1 -Type exe`(또는 app-image) → 새 배포본.
+5. `main` 병합 → 커밋 → 태그(`git tag -a v1.0.1 -m "..."`) → `git push --tags`.
+6. (인터넷팀) `gh release create`로 배포본 첨부 / (폐쇄망) 새 배포본 전달.
+
+받는 쪽 업데이트 방법:
+- **인스톨러(.exe)**: 새 버전 exe 실행 → 기존 위에 업그레이드 설치.
+- **app-image**: 폴더를 새 것으로 통째 교체.
+
+> `dist/`·`build/`·`package/`는 `.gitignore` 대상. 배포본은 git에 커밋하지 말고 빌드로 재생산하거나 GitHub Releases/사내 아티팩트에 보관.
 
 ### 변경 시 함께 갱신할 것
 - 생성 산출물 구조가 바뀌면 → `USER-GUIDE.md` 6장, `SKELETON.md`
 - 설정 항목이 바뀌면 → `gen.properties`, `USER-GUIDE.md` 3장
 - eGov 좌표가 바뀌면 → 5장 표, `gen.properties` 기본값
+- 배포 버전을 올릴 땐 → `package.ps1`의 `--app-version` (+ git 태그)
 
 ---
 
