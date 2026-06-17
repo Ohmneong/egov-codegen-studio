@@ -24,11 +24,13 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1          # 빌드 → dist\
 7. 생성 코드 주석·식별자는 한글 주석 + eGov 네이밍 관례.
 
 ## 소스 구조
-- `Main.java` — CLI 진입점(인자 파싱, 파서 선택, 실행, 결과/URL 출력)
-- `config/GenConfig.java` — 설정(gen.properties) 로드 + CLI 덮어쓰기
+- `Main.java` — CLI 진입점(인자 파싱, 파일 읽기, 결과/URL 출력). 생성 자체는 `service`에 위임하는 얇은 어댑터
+- `config/GenConfig.java` — 설정(gen.properties) 로드 + CLI 덮어쓰기(`override`) + GUI 폼 주입(`setXxx`)
 - `model/` — `TableMeta`, `ColumnMeta` (중간 메타모델)
 - `parser/` — `DdlParser`(인터페이스), `MySqlDdlParser`
 - `gen/` — `NameUtil`, `TypeMapper`, **`CodeGenerator`(템플릿+생성, 가장 자주 수정)**
+- `service/` — `GenerationService`(파서선택→파싱→생성, 콘솔 비의존), `GenerationResult`(결과 DTO). **CLI/GUI 공유 진입점**
+- `ui/` — `GenGuiApp`(Swing GUI). 같은 `GenerationService` 호출. Swing은 JDK 내장(의존성 0 유지)
 
 ## 수정 시 워크플로
 1. 수정 → `build.ps1` → `sample/*.sql`로 생성해 눈으로 확인

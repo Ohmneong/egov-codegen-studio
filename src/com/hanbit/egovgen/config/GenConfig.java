@@ -79,6 +79,16 @@ public class GenConfig {
     public String serviceBase() { return serviceBase; }
     public String paginationInfo() { return paginationInfo; }
 
+    // GUI 폼 주입용 setter. CLI는 load()+override()로, GUI는 load() 후 폼값을 이 setter로 반영한다.
+    // (공통컴포넌트 베이스(dao/service/pagination)는 폼에 노출하지 않으므로 setter 없음 → properties 값 유지)
+    public void setBasePackage(String v) { if (v != null) basePackage = v; }
+    public void setModule(String v) { if (v != null) module = v; }
+    public void setTablePrefix(String v) { if (v != null) tablePrefix = v; }
+    public void setDbType(String v) { if (v != null) dbType = v; }
+    public void setOutputDir(String v) { if (v != null) outputDir = v; }
+    public void setUseIdgnr(boolean v) { useIdgnr = v; }
+    public void setBaseUrl(String v) { if (v != null) baseUrl = v; }
+
     /** FQCN에서 단순 클래스명만. */
     public static String simpleName(String fqcn) {
         int dot = fqcn.lastIndexOf('.');

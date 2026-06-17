@@ -109,6 +109,21 @@ $java = "C:\eGovFrameDev-5.0.1-Windows-64bit\eclipse\plugins\...\jre\bin\java.ex
 | `--out <디렉터리>` | 출력 루트 |
 | `--idgnr` | 채번 적용 (String PK일 때만 동작) |
 
+### 5-B. GUI로 실행 (Swing 화면)
+
+명령행이 익숙하지 않다면 화면으로 쓸 수 있습니다. 빌드(2번)는 동일하게 한 뒤:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run-gui.ps1
+```
+
+- 시작 시 작업 폴더의 `gen.properties` 값이 설정 폼에 자동으로 채워집니다.
+- 좌측에 DDL을 붙여넣거나 `[DDL 파일 열기…]`로 불러오고, 설정 폼(패키지·모듈·prefix·DB·출력경로·baseUrl·채번)을 조정합니다.
+- `[생성]`을 누르면 우측에 파싱 요약·생성 파일 목록·접속 URL이 표시됩니다.
+- `[설정 다시 불러오기]`는 폼을 `gen.properties` 값으로 되돌립니다.
+
+> 내부적으로 CLI와 **같은 생성 엔진**을 호출하므로 산출물은 명령행 실행과 동일합니다. 추가 설치물은 없습니다(Swing은 JDK 내장).
+
 ---
 
 ## 6. 산출물 (테이블 1개 → 11~12파일)
